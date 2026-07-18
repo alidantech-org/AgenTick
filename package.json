@@ -18,10 +18,5 @@
     "prettier": "3.6.2",
     "turbo": "2.10.5",
     "typescript": "7.0.2"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp"
-    ]
   }
 }
