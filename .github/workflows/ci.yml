@@ -1,39 +1,47 @@
-name: Clean implementation artifacts
+name: CI
 
 on:
+  push:
+    branches: [main, 'chatgpt/**']
   pull_request:
-    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: clean-agentick-implementation
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  clean:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: chatgpt/bootstrap
-          fetch-depth: 0
           show-progress: false
-      - name: Remove generated and temporary files
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - run: corepack enable
+      - name: Install dependencies
         shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf .agentick-update .turbo apps/site/.turbo packages/*/.turbo
-          if ! grep -qxF '.turbo/' .gitignore; then
-            printf '\n.turbo/\n' >> .gitignore
-          fi
-      - name: Publish cleanup commit
+        run: pnpm install --frozen-lockfile > /tmp/agentick-install.log 2>&1
+      - name: Format check
         shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'chore: remove generated implementation artifacts'
-          git push origin HEAD:chatgpt/bootstrap
+        run: pnpm format:check > /tmp/agentick-format.log 2>&1
+      - name: Typecheck
+        shell: bash
+        run: pnpm typecheck > /tmp/agentick-typecheck.log 2>&1
+      - name: Test
+        shell: bash
+        run: pnpm test > /tmp/agentick-test.log 2>&1
+      - name: Build
+        shell: bash
+        run: pnpm build > /tmp/agentick-build.log 2>&1
+      - name: Upload failed command logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics
+          path: /tmp/agentick-*.log
+          if-no-files-found: ignore
