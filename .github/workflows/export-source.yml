@@ -1,0 +1,30 @@
+name: Export source snapshot
+
+on:
+  push:
+    branches: ['chatgpt/bootstrap']
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          show-progress: false
+      - name: Create source archive
+        shell: bash
+        run: |
+          tar \
+            --exclude=.git \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=dist \
+            -czf /tmp/agentick-source.tgz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: agentick-source
+          path: /tmp/agentick-source.tgz
+          if-no-files-found: error
