@@ -26,17 +26,23 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          if ! pnpm install --no-frozen-lockfile > /tmp/agentick-install.log 2>&1; then
-            tail -n 40 /tmp/agentick-install.log
-            exit 1
-          fi
-      - name: Upload failed install log
+          pnpm install --no-frozen-lockfile > /tmp/agentick-install.log 2>&1
+      - name: Typecheck
+        shell: bash
+        run: |
+          pnpm typecheck > /tmp/agentick-typecheck.log 2>&1
+      - name: Test
+        shell: bash
+        run: |
+          pnpm test > /tmp/agentick-test.log 2>&1
+      - name: Build
+        shell: bash
+        run: |
+          pnpm build > /tmp/agentick-build.log 2>&1
+      - name: Upload failed command logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: dependency-install-log
-          path: /tmp/agentick-install.log
+          name: ci-diagnostics
+          path: /tmp/agentick-*.log
           if-no-files-found: ignore
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
