@@ -1,7 +1,7 @@
 import { access, readFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { join, relative } from 'node:path';
-import { execa, execaCommand } from 'execa';
+import { execa } from 'execa';
 import {
   parseSkillDeclaration,
   parseSkillLock,
@@ -138,7 +138,7 @@ export async function verifyProject(
       await history.record('command.started', {
         payload: { name: command.name, command: command.run },
       });
-      const result = await execaCommand(command.run, {
+      const result = await execa(command.run, {
         cwd: project.root,
         shell: true,
         reject: false,
