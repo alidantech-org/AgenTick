@@ -25,19 +25,24 @@ jobs:
       - run: corepack enable
       - name: Install dependencies
         shell: bash
-        run: pnpm install --frozen-lockfile > /tmp/agentick-install.log 2>&1
+        run: |
+          pnpm install --frozen-lockfile > /tmp/agentick-install.log 2>&1
       - name: Format check
         shell: bash
-        run: pnpm format:check > /tmp/agentick-format.log 2>&1
+        run: |
+          pnpm format:check > /tmp/agentick-format.log 2>&1
       - name: Typecheck
         shell: bash
-        run: pnpm typecheck > /tmp/agentick-typecheck.log 2>&1
+        run: |
+          pnpm typecheck > /tmp/agentick-typecheck.log 2>&1
       - name: Test
         shell: bash
-        run: pnpm test > /tmp/agentick-test.log 2>&1
+        run: |
+          pnpm test > /tmp/agentick-test.log 2>&1
       - name: Build
         shell: bash
-        run: pnpm build > /tmp/agentick-build.log 2>&1
+        run: |
+          pnpm build > /tmp/agentick-build.log 2>&1
       - name: Upload failed command logs
         if: failure()
         uses: actions/upload-artifact@v4
