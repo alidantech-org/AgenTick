@@ -20,6 +20,21 @@
     "esModuleInterop": true,
     "types": [
       "node"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@alidantech/agentick-config": [
+        "packages/config/src/index.ts"
+      ],
+      "@alidantech/agentick-shared": [
+        "packages/shared/src/index.ts"
+      ],
+      "@alidantech/agentick-skill-lib": [
+        "packages/skill-lib/src/index.ts"
+      ],
+      "@alidantech/agentick-ui": [
+        "packages/ui/src/index.ts"
+      ]
+    }
   }
 }
