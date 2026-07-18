@@ -1,18 +1,17 @@
-import { createHash } from 'node:crypto';
-import { lstat, readFile, readdir } from 'node:fs/promises';
-import { posix, relative, resolve } from 'node:path';
-import { parse } from 'yaml';
-import { z } from 'zod';
+import { createHash } from "node:crypto";
+import { lstat, readFile, readdir } from "node:fs/promises";
+import { posix, relative, resolve } from "node:path";
+import { parse } from "yaml";
+import { z } from "zod";
 
-const skillId = z
+const skillId = z.string().regex(/^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/);
+
+const exactSemver = z
   .string()
-  .regex(/^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/);
-
-
-const exactSemver = z.string().regex(
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/,
-  'Expected an exact semantic version',
-);
+  .regex(
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/,
+    "Expected an exact semantic version",
+  );
 
 const metadataSchema = z.object({
   name: z
@@ -24,7 +23,7 @@ const metadataSchema = z.object({
   license: z.string().optional(),
   compatibility: z.string().max(500).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
-  'allowed-tools': z.string().optional(),
+  "allowed-tools": z.string().optional(),
 });
 
 export type SkillMetadata = z.infer<typeof metadataSchema>;
@@ -38,7 +37,7 @@ export const skillBundleSchema = z.object({
     .array(
       z.object({
         path: z.string().min(1).max(500),
-        encoding: z.literal('base64'),
+        encoding: z.literal("base64"),
         content: z.string(),
       }),
     )
@@ -60,16 +59,17 @@ export const DEFAULT_BUNDLE_LIMITS: SkillBundleLimits = {
   maxTotalBytes: 10 * 1024 * 1024,
 };
 
-export function parseSkillMarkdown(
-  source: string,
-): { metadata: SkillMetadata; body: string } {
-  if (!source.startsWith('---\n')) {
-    throw new Error('SKILL.md must start with YAML frontmatter');
+export function parseSkillMarkdown(source: string): {
+  metadata: SkillMetadata;
+  body: string;
+} {
+  if (!source.startsWith("---\n")) {
+    throw new Error("SKILL.md must start with YAML frontmatter");
   }
 
-  const end = source.indexOf('\n---\n', 4);
+  const end = source.indexOf("\n---\n", 4);
   if (end < 0) {
-    throw new Error('SKILL.md frontmatter is not closed');
+    throw new Error("SKILL.md frontmatter is not closed");
   }
 
   const metadata = metadataSchema.parse(parse(source.slice(4, end)));
@@ -78,7 +78,7 @@ export function parseSkillMarkdown(
 
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalize);
-  if (value && typeof value === 'object') {
+  if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .sort(([left], [right]) => left.localeCompare(right))
@@ -95,11 +95,11 @@ export function canonicalBundleBytes(bundle: SkillBundle): Uint8Array {
       left.path.localeCompare(right.path),
     ),
   });
-  return Buffer.from(JSON.stringify(canonicalize(normalized)), 'utf8');
+  return Buffer.from(JSON.stringify(canonicalize(normalized)), "utf8");
 }
 
 export function integrityFor(content: Uint8Array): string {
-  return `sha512-${createHash('sha512').update(content).digest('base64')}`;
+  return `sha512-${createHash("sha512").update(content).digest("base64")}`;
 }
 
 export function integrityForBundle(bundle: SkillBundle): string {
@@ -117,14 +117,14 @@ export function validateBundlePaths(
   const paths = new Set<string>();
   let totalBytes = 0;
   for (const file of bundle.files) {
-    if (file.path.includes('\\') || file.path.includes('\0')) {
+    if (file.path.includes("\\") || file.path.includes("\0")) {
       throw new Error(`Invalid skill path: ${file.path}`);
     }
     const normalized = posix.normalize(file.path);
     if (
       normalized !== file.path ||
-      normalized.startsWith('../') ||
-      normalized === '..' ||
+      normalized.startsWith("../") ||
+      normalized === ".." ||
       posix.isAbsolute(normalized)
     ) {
       throw new Error(`Unsafe skill path: ${file.path}`);
@@ -134,30 +134,30 @@ export function validateBundlePaths(
     }
     paths.add(normalized);
 
-    const size = Buffer.byteLength(file.content, 'base64');
+    const size = Buffer.byteLength(file.content, "base64");
     if (size > limits.maxFileBytes) {
       throw new Error(`Skill file exceeds size limit: ${file.path}`);
     }
     totalBytes += size;
     if (totalBytes > limits.maxTotalBytes) {
-      throw new Error('Skill bundle exceeds total size limit');
+      throw new Error("Skill bundle exceeds total size limit");
     }
   }
 
-  if (!paths.has('SKILL.md')) {
-    throw new Error('Skill bundle must contain SKILL.md');
+  if (!paths.has("SKILL.md")) {
+    throw new Error("Skill bundle must contain SKILL.md");
   }
 }
 
 export function validateSkillBundle(input: unknown): SkillBundle {
   const bundle = skillBundleSchema.parse(input);
   validateBundlePaths(bundle);
-  const skillMarkdown = bundle.files.find((file) => file.path === 'SKILL.md');
-  if (!skillMarkdown) throw new Error('Skill bundle must contain SKILL.md');
+  const skillMarkdown = bundle.files.find((file) => file.path === "SKILL.md");
+  if (!skillMarkdown) throw new Error("Skill bundle must contain SKILL.md");
   const parsed = parseSkillMarkdown(
-    Buffer.from(skillMarkdown.content, 'base64').toString('utf8'),
+    Buffer.from(skillMarkdown.content, "base64").toString("utf8"),
   );
-  const expectedName = bundle.id.split('/')[1];
+  const expectedName = bundle.id.split("/")[1];
   if (parsed.metadata.name !== expectedName) {
     throw new Error(
       `SKILL.md name ${parsed.metadata.name} does not match bundle id ${bundle.id}`,
@@ -176,7 +176,8 @@ async function collectFiles(root: string, directory = root): Promise<string[]> {
       throw new Error(`Skill sources may not contain symlinks: ${absolute}`);
     }
     if (stat.isDirectory()) files.push(...(await collectFiles(root, absolute)));
-    else if (stat.isFile()) files.push(relative(root, absolute).replaceAll('\\', '/'));
+    else if (stat.isFile())
+      files.push(relative(root, absolute).replaceAll("\\", "/"));
   }
   return files;
 }
@@ -191,14 +192,14 @@ export async function createSkillBundle(input: {
   const files = await Promise.all(
     paths.map(async (path) => ({
       path,
-      encoding: 'base64' as const,
-      content: (await readFile(resolve(directory, path))).toString('base64'),
+      encoding: "base64" as const,
+      content: (await readFile(resolve(directory, path))).toString("base64"),
     })),
   );
-  const skillMarkdown = files.find((file) => file.path === 'SKILL.md');
-  if (!skillMarkdown) throw new Error('Skill source must contain SKILL.md');
+  const skillMarkdown = files.find((file) => file.path === "SKILL.md");
+  if (!skillMarkdown) throw new Error("Skill source must contain SKILL.md");
   const { metadata } = parseSkillMarkdown(
-    Buffer.from(skillMarkdown.content, 'base64').toString('utf8'),
+    Buffer.from(skillMarkdown.content, "base64").toString("utf8"),
   );
   return validateSkillBundle({
     formatVersion: 1,
@@ -218,8 +219,12 @@ export function registryUrlFromEnv(
     throw new Error(`${envName} must point to the AgenTick registry`);
   }
   const url = new URL(value);
-  if (!['https:', 'http:'].includes(url.protocol)) {
+  if (!["https:", "http:"].includes(url.protocol)) {
     throw new Error(`${envName} must use http or https`);
+  }
+  const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+  if (url.protocol !== "https:" && !localHosts.has(url.hostname)) {
+    throw new Error(`${envName} must use https outside local development`);
   }
   return url;
 }

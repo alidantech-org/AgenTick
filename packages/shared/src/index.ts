@@ -1,20 +1,24 @@
 export type AgentickEventType =
-  | 'session.started'
-  | 'session.stopped'
-  | 'file.added'
-  | 'file.changed'
-  | 'file.removed'
-  | 'verification.started'
-  | 'verification.finished'
-  | 'command.started'
-  | 'command.finished'
-  | 'finding.created'
-  | 'finding.updated'
-  | 'project.initialized'
-  | 'tool.write.planned'
-  | 'tool.write.completed'
-  | 'skill.pulled'
-  | 'skill.published';
+  | "session.started"
+  | "session.stopped"
+  | "file.added"
+  | "file.changed"
+  | "file.removed"
+  | "verification.started"
+  | "verification.finished"
+  | "command.started"
+  | "command.finished"
+  | "finding.created"
+  | "finding.updated"
+  | "project.initialized"
+  | "tool.write.planned"
+  | "tool.write.completed"
+  | "skill.pulled"
+  | "skill.published"
+  | "skill.declared"
+  | "skill.removed"
+  | "registry.login"
+  | "registry.logout";
 
 export interface AgentickEvent {
   id: string;
@@ -26,14 +30,14 @@ export interface AgentickEvent {
   payload?: Record<string, unknown>;
 }
 
-export type FindingSeverity = 'info' | 'warning' | 'error' | 'critical';
+export type FindingSeverity = "info" | "warning" | "error" | "critical";
 export type FindingStatus =
-  | 'open'
-  | 'accepted'
-  | 'fixed'
-  | 'disputed'
-  | 'blocked'
-  | 'waived';
+  | "open"
+  | "accepted"
+  | "fixed"
+  | "disputed"
+  | "blocked"
+  | "waived";
 
 export interface Finding {
   id: string;

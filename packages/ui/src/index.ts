@@ -1,1 +1,1 @@
-export const productName = 'AgenTick';
+export const productName = "AgenTick";

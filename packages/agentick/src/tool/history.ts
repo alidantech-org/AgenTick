@@ -1,14 +1,14 @@
-import { randomUUID } from 'node:crypto';
-import { appendFile, mkdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { randomUUID } from "node:crypto";
+import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import type {
   AgentickEvent,
   AgentickEventType,
   Finding,
   FindingSeverity,
-} from '@alidantech/agentick-shared';
-import type { ProjectContext } from './project.js';
+} from "@alidantech/agentick-shared";
+import type { ProjectContext } from "./project.js";
 
 export class HistoryStore {
   readonly stateDir: string;
@@ -20,9 +20,9 @@ export class HistoryStore {
     private readonly project: ProjectContext,
     readonly sessionId = randomUUID(),
   ) {
-    this.stateDir = join(project.agentsDir, '.agentick');
-    this.jsonlPath = join(this.stateDir, 'events.jsonl');
-    this.sqlitePath = join(this.stateDir, 'agentick.db');
+    this.stateDir = join(project.agentsDir, ".agentick");
+    this.jsonlPath = join(this.stateDir, "events.jsonl");
+    this.sqlitePath = join(this.stateDir, "agentick.db");
   }
 
   async open(): Promise<void> {
@@ -73,19 +73,17 @@ export class HistoryStore {
     };
 
     // JSONL is canonical. SQLite is a local query index that can be rebuilt.
-    await appendFile(this.jsonlPath, `${JSON.stringify(event)}\n`, 'utf8');
-    this.database!
-      .prepare(
-        'INSERT INTO events (id, session_id, type, timestamp, path, payload_json) VALUES (?, ?, ?, ?, ?, ?)',
-      )
-      .run(
-        event.id,
-        event.sessionId,
-        event.type,
-        event.timestamp,
-        event.path ?? null,
-        JSON.stringify(event.payload ?? {}),
-      );
+    await appendFile(this.jsonlPath, `${JSON.stringify(event)}\n`, "utf8");
+    this.database!.prepare(
+      "INSERT INTO events (id, session_id, type, timestamp, path, payload_json) VALUES (?, ?, ?, ?, ?, ?)",
+    ).run(
+      event.id,
+      event.sessionId,
+      event.type,
+      event.timestamp,
+      event.path ?? null,
+      JSON.stringify(event.payload ?? {}),
+    );
     return event;
   }
 
@@ -105,32 +103,30 @@ export class HistoryStore {
       severity: input.severity,
       rule: input.rule,
       message: input.message,
-      status: 'open',
+      status: "open",
       evidence: input.evidence ?? [],
       ...(input.path ? { path: input.path } : {}),
       ...(input.suggestedAction
         ? { suggestedAction: input.suggestedAction }
         : {}),
     };
-    this.database!
-      .prepare(
-        `INSERT INTO findings
+    this.database!.prepare(
+      `INSERT INTO findings
           (id, session_id, timestamp, severity, rule, status, path, message, evidence_json, suggested_action)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .run(
-        finding.id,
-        finding.sessionId,
-        finding.timestamp,
-        finding.severity,
-        finding.rule,
-        finding.status,
-        finding.path ?? null,
-        finding.message,
-        JSON.stringify(finding.evidence),
-        finding.suggestedAction ?? null,
-      );
-    const event = await this.record('finding.created', {
+    ).run(
+      finding.id,
+      finding.sessionId,
+      finding.timestamp,
+      finding.severity,
+      finding.rule,
+      finding.status,
+      finding.path ?? null,
+      finding.message,
+      JSON.stringify(finding.evidence),
+      finding.suggestedAction ?? null,
+    );
+    const event = await this.record("finding.created", {
       ...(finding.path ? { path: finding.path } : {}),
       payload: { ...finding },
     });
@@ -139,10 +135,10 @@ export class HistoryStore {
 
   async recent(limit = 100): Promise<AgentickEvent[]> {
     try {
-      const source = await readFile(this.jsonlPath, 'utf8');
+      const source = await readFile(this.jsonlPath, "utf8");
       return source
         .trim()
-        .split('\n')
+        .split("\n")
         .filter(Boolean)
         .slice(-limit)
         .map((line) => JSON.parse(line) as AgentickEvent);
@@ -168,7 +164,7 @@ export class HistoryStore {
           timestamp: String(item.timestamp),
           severity: item.severity as FindingSeverity,
           rule: String(item.rule),
-          status: item.status as Finding['status'],
+          status: item.status as Finding["status"],
           message: String(item.message),
           evidence: JSON.parse(String(item.evidence_json)) as string[],
           ...(item.path ? { path: String(item.path) } : {}),

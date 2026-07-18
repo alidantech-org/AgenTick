@@ -1,39 +1,67 @@
 # Serverless Skill Registry
 
-`apps/site` is a Next.js App Router application. Route Handlers provide the HTTP
-registry API and server-only modules own secrets, token verification, and data
-access.
+`apps/site` is a Next.js App Router application. Server Components render the
+landing, registry, package, and account surfaces; Route Handlers expose the CLI
+and browser APIs. Authorization is repeated in the data-access layer instead of
+being delegated to optimistic route protection.
 
 ## Storage
 
 Development uses local SQLite through a `file:` libSQL URL. Hosted serverless
-instances use a remote libSQL/Turso URL so all function instances share the same
-SQLite-compatible database. Skill bundles are initially stored as immutable JSON
-inside SQLite; object storage can be introduced later without changing the lock
-or bundle format.
+instances use a shared remote libSQL/Turso URL because ephemeral function disks
+cannot be a shared database. The schema is versioned through
+`schema_migrations`, and related account, namespace, and membership writes use
+libSQL batch transactions.
 
-## Accounts and tokens
+The registry stores deterministic, validated skill bundles as immutable JSON.
+Every version has a canonical SHA-512 digest. Bundles reject absolute paths,
+traversal, duplicate paths, symlinks, missing `SKILL.md`, and configured size
+limits before publication or installation.
 
-Publishing requires an account. CLI tokens are:
+## Identity and sessions
 
-- displayed only once;
-- stored by the server only as a keyed hash plus a visible prefix;
-- scoped, for example `skills:read` and `skills:write`;
-- revocable and timestamped;
-- never accepted in query strings or written to project YAML/JSONL logs.
+Website authentication is passwordless:
 
-The initial CLI accepts `AGENTICK_TOKEN`. A later `agentick login` command will
-store the same token in the operating-system credential manager.
+1. a user submits an email;
+2. AgenTick emails an eight-digit, ten-minute code;
+3. only a keyed hash of the code is stored;
+4. successful verification creates or loads the account and issues a random
+   database-backed session cookie;
+5. the cookie is `HttpOnly`, `SameSite=Lax`, secure in production, and revocable.
 
-## API direction
+Organisation invitations use one-time `agt_join_...` codes with substantially
+more than twelve characters. Codes are hashed, bound to the invited email,
+expire after seven days, and are consumed transactionally when membership is
+created.
+
+## Namespaces and visibility
+
+`registry_namespaces` is the canonical namespace table. Personal handles and
+organisation slugs therefore cannot collide. Publishing requires ownership of a
+personal namespace or an `owner`, `admin`, or `publisher` role in an
+organisation.
+
+Public skills can be searched, viewed, resolved, and downloaded anonymously.
+Private skills require either an active member session or a live CLI token with
+`skills:read`. Publishing requires `skills:write`. Versions are immutable.
+
+## CLI credentials
+
+Tokens are shown only once by the website and stored server-side only as a keyed
+hash plus a short visible prefix. `agentick login` validates a pasted token and
+stores it in `agents/.agentick/auth.json`, a generated git-ignored file with
+user-only filesystem permissions where supported. `AGENTICK_TOKEN` remains an
+explicit CI override.
+
+## API
 
 ```text
+GET  /api/v1/auth/me
+GET  /api/v1/skills/search?q=<query>&sort=<popular|newest|updated>
 GET  /api/v1/skills/:namespace/:name/resolve?version=<range>
-GET  /api/v1/skills/:namespace/:name/versions/:version
+GET  /api/v1/skills/:namespace/:name/download?version=<version>
 POST /api/v1/skills/:namespace/:name/versions
 ```
 
-Resolve and download are anonymous for public skills and authenticated for
-private skills. Publishing requires namespace ownership and `skills:write`.
-Published versions are immutable; corrections require a new version or an
-explicit yank that preserves history.
+The registry records deduplicated daily view and download events and exposes
+aggregated counts beside each package.

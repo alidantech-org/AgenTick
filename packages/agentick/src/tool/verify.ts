@@ -1,14 +1,14 @@
-import { access, readFile } from 'node:fs/promises';
-import { constants } from 'node:fs';
-import { join, relative } from 'node:path';
-import { execa } from 'execa';
+import { access, readFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { join, relative } from "node:path";
+import { execa } from "execa";
 import {
   parseSkillDeclaration,
   parseSkillLock,
   type AgentickConfig,
-} from '@alidantech/agentick-config';
-import { discoverProject, loadProjectConfig } from './project.js';
-import { HistoryStore } from './history.js';
+} from "@alidantech/agentick-config";
+import { discoverProject, loadProjectConfig } from "./project.js";
+import { HistoryStore } from "./history.js";
 
 export interface VerificationCheck {
   name: string;
@@ -31,7 +31,7 @@ async function exists(path: string): Promise<boolean> {
 }
 
 function outputSummary(stdout: string, stderr: string): string {
-  const output = [stdout, stderr].filter(Boolean).join('\n').trim();
+  const output = [stdout, stderr].filter(Boolean).join("\n").trim();
   return output.length > 2_000 ? output.slice(-2_000) : output;
 }
 
@@ -41,24 +41,24 @@ export async function verifyProject(
 ): Promise<VerificationResult> {
   const project = await discoverProject(cwd);
   const history = new HistoryStore(project);
-  await history.record('verification.started');
+  await history.record("verification.started");
   const checks: VerificationCheck[] = [];
   let config: AgentickConfig;
 
   try {
     config = await loadProjectConfig(project);
     checks.push({
-      name: 'config',
+      name: "config",
       passed: true,
-      message: 'agents/agentick.yml is valid',
+      message: "agents/agentick.yml is valid",
     });
   } catch (error) {
     checks.push({
-      name: 'config',
+      name: "config",
       passed: false,
       message: error instanceof Error ? error.message : String(error),
     });
-    await history.record('verification.finished', {
+    await history.record("verification.finished", {
       payload: { passed: false, checks },
     });
     history.close();
@@ -66,29 +66,29 @@ export async function verifyProject(
   }
 
   for (const file of [
-    'AGENTS.md',
-    'README.md',
-    'INSTRUCTIONS.md',
-    'skills.yml',
-    'skills.lock.yml',
+    "AGENTS.md",
+    "README.md",
+    "INSTRUCTIONS.md",
+    "skills.yml",
+    "skills.lock.yml",
   ]) {
     const present = await exists(join(project.agentsDir, file));
     checks.push({
       name: `agents/${file}`,
       passed: present,
-      message: present ? 'present' : 'missing',
+      message: present ? "present" : "missing",
     });
   }
 
   try {
     const declarations = parseSkillDeclaration(
-      await readFile(join(project.agentsDir, 'skills.yml'), 'utf8'),
+      await readFile(join(project.agentsDir, "skills.yml"), "utf8"),
     );
     const lock = parseSkillLock(
-      await readFile(join(project.agentsDir, 'skills.lock.yml'), 'utf8'),
+      await readFile(join(project.agentsDir, "skills.lock.yml"), "utf8"),
     );
-    checks.push({ name: 'skills declaration', passed: true, message: 'valid' });
-    checks.push({ name: 'skills lock', passed: true, message: 'valid' });
+    checks.push({ name: "skills declaration", passed: true, message: "valid" });
+    checks.push({ name: "skills lock", passed: true, message: "valid" });
 
     for (const skill of declarations.skills.filter((item) => item.enabled)) {
       const locked = lock.skills[skill.id];
@@ -102,40 +102,41 @@ export async function verifyProject(
     }
   } catch (error) {
     checks.push({
-      name: 'skills metadata',
+      name: "skills metadata",
       passed: false,
       message: error instanceof Error ? error.message : String(error),
     });
   }
 
-  const gitignore = await readFile(join(project.root, '.gitignore'), 'utf8').catch(
-    () => '',
-  );
-  for (const entry of ['/agents/skillib/', '/agents/.agentick/']) {
+  const gitignore = await readFile(
+    join(project.root, ".gitignore"),
+    "utf8",
+  ).catch(() => "");
+  for (const entry of ["/agents/skillib/", "/agents/.agentick/"]) {
     const ignored = gitignore.includes(entry);
     checks.push({
       name: `gitignore ${entry}`,
       passed: ignored,
-      message: ignored ? 'managed path ignored' : 'missing ignore entry',
+      message: ignored ? "managed path ignored" : "missing ignore entry",
     });
   }
 
   const trackedGenerated = await execa(
-    'git',
-    ['ls-files', 'agents/skillib', 'agents/.agentick'],
+    "git",
+    ["ls-files", "agents/skillib", "agents/.agentick"],
     { cwd: project.root, reject: false },
   );
   checks.push({
-    name: 'generated state tracking',
+    name: "generated state tracking",
     passed: trackedGenerated.stdout.trim().length === 0,
     message: trackedGenerated.stdout.trim()
       ? `generated files are tracked: ${trackedGenerated.stdout.trim()}`
-      : 'managed skill library and runtime state are untracked',
+      : "managed skill library and runtime state are untracked",
   });
 
   if (runCommands) {
     for (const command of config.verify.commands) {
-      await history.record('command.started', {
+      await history.record("command.started", {
         payload: { name: command.name, command: command.run },
       });
       const result = await execa(command.run, {
@@ -149,9 +150,9 @@ export async function verifyProject(
       checks.push({
         name: `command:${command.name}`,
         passed,
-        message: `exit ${result.exitCode}${summary ? `: ${summary}` : ''}`,
+        message: `exit ${result.exitCode}${summary ? `: ${summary}` : ""}`,
       });
-      await history.record('command.finished', {
+      await history.record("command.finished", {
         payload: {
           name: command.name,
           command: command.run,
@@ -165,11 +166,11 @@ export async function verifyProject(
   }
 
   const passed = checks.every((check) => check.passed);
-  await history.record('verification.finished', {
+  await history.record("verification.finished", {
     payload: {
       passed,
       checks,
-      cwd: relative(project.root, cwd) || '.',
+      cwd: relative(project.root, cwd) || ".",
     },
   });
   history.close();

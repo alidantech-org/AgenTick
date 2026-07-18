@@ -1,11 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import {
-  parseAgentickConfig,
-  parseSkillLock,
-} from './index.js';
+import { describe, expect, it } from "vitest";
+import { parseAgentickConfig, parseSkillLock } from "./index.js";
 
-describe('AgenTick configuration', () => {
-  it('accepts a self-contained agents configuration', () => {
+describe("AgenTick configuration", () => {
+  it("accepts a self-contained agents configuration", () => {
     const value = parseAgentickConfig(`
 version: 1
 project: { name: sample, root: . }
@@ -23,11 +20,11 @@ skilllib:
   requireIntegrity: true
   executeInstalledScripts: false
 `);
-    expect(value.project.name).toBe('sample');
-    expect(value.skilllib.directory).toBe('agents/skillib');
+    expect(value.project.name).toBe("sample");
+    expect(value.skilllib.directory).toBe("agents/skillib");
   });
 
-  it('requires SHA-512 SRI values in the skills lock', () => {
+  it("requires SHA-512 SRI values in the skills lock", () => {
     expect(() =>
       parseSkillLock(`
 lockfileVersion: 1
@@ -41,7 +38,7 @@ skills:
     ).toThrow();
   });
 
-  it('requires exact semantic versions in the skills lock', () => {
+  it("requires exact semantic versions in the skills lock", () => {
     expect(() =>
       parseSkillLock(`
 lockfileVersion: 1
@@ -54,5 +51,4 @@ skills:
 `),
     ).toThrow(/exact semantic version/);
   });
-
 });

@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from "node:crypto";
 import {
   chmod,
   mkdir,
@@ -7,23 +7,31 @@ import {
   rename,
   rm,
   writeFile,
-} from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+} from "node:fs/promises";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from "node:path";
 import {
   parseSkillDeclaration,
   parseSkillLock,
   toYaml,
   type SkillLock,
-} from '@alidantech/agentick-config';
+} from "@alidantech/agentick-config";
 import {
   createSkillBundle,
   integrityForBundle,
   registryUrlFromEnv,
   validateSkillBundle,
   type SkillBundle,
-} from '@alidantech/agentick-skill-lib';
-import { HistoryStore } from './history.js';
-import { discoverProject, loadProjectConfig } from './project.js';
+} from "@alidantech/agentick-skill-lib";
+import { HistoryStore } from "./history.js";
+import { discoverProject, loadProjectConfig } from "./project.js";
+import { resolveRegistryToken } from "./auth.js";
 
 interface ResolvedSkillResponse {
   id: string;
@@ -34,7 +42,7 @@ interface ResolvedSkillResponse {
 }
 
 function contentIntegrity(content: string): string {
-  return `sha512-${createHash('sha512').update(content, 'utf8').digest('base64')}`;
+  return `sha512-${createHash("sha512").update(content, "utf8").digest("base64")}`;
 }
 
 async function writeAtomically(path: string, content: string): Promise<void> {
@@ -44,13 +52,15 @@ async function writeAtomically(path: string, content: string): Promise<void> {
   let movedExisting = false;
 
   await mkdir(directory, { recursive: true });
-  await writeFile(temp, content, 'utf8');
+  await writeFile(temp, content, "utf8");
   try {
     try {
       await rename(path, backup);
       movedExisting = true;
     } catch (error) {
-      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
+      if (
+        !(error instanceof Error && "code" in error && error.code === "ENOENT")
+      ) {
         throw error;
       }
     }
@@ -91,22 +101,25 @@ async function installBundle(
   agentsDir: string,
   bundle: SkillBundle,
 ): Promise<void> {
-  const [namespace, name] = bundle.id.split('/');
+  const [namespace, name] = bundle.id.split("/");
   if (!namespace || !name) throw new Error(`Invalid skill id: ${bundle.id}`);
-  const tempRoot = join(agentsDir, '.agentick', 'tmp', randomUUID());
+  const tempRoot = join(agentsDir, ".agentick", "tmp", randomUUID());
   const tempSkill = join(tempRoot, namespace, name);
-  const target = join(agentsDir, 'skillib', namespace, name);
+  const target = join(agentsDir, "skillib", namespace, name);
   await mkdir(tempSkill, { recursive: true });
 
   try {
     for (const file of bundle.files) {
       const destination = resolve(tempSkill, file.path);
       const relativeDestination = relative(tempSkill, destination);
-      if (relativeDestination.startsWith('..') || isAbsolute(relativeDestination)) {
+      if (
+        relativeDestination.startsWith("..") ||
+        isAbsolute(relativeDestination)
+      ) {
         throw new Error(`Unsafe installation path: ${file.path}`);
       }
       await mkdir(dirname(destination), { recursive: true });
-      await writeFile(destination, Buffer.from(file.content, 'base64'));
+      await writeFile(destination, Buffer.from(file.content, "base64"));
     }
     await makeReadOnly(tempSkill);
     await makeWritable(target);
@@ -119,8 +132,7 @@ async function installBundle(
   }
 }
 
-function authorizationHeaders(env: NodeJS.ProcessEnv): HeadersInit {
-  const token = env.AGENTICK_TOKEN;
+function authorizationHeaders(token: string | null): HeadersInit {
   return token ? { authorization: `Bearer ${token}` } : {};
 }
 
@@ -135,11 +147,12 @@ export async function pullSkills(
 
   try {
     const registry = registryUrlFromEnv(config.registry.urlEnv, env);
+    const token = await resolveRegistryToken(project, registry, env);
     const declarations = parseSkillDeclaration(
-      await readFile(join(project.agentsDir, 'skills.yml'), 'utf8'),
+      await readFile(join(project.agentsDir, "skills.yml"), "utf8"),
     );
-    const lockPath = join(project.agentsDir, 'skills.lock.yml');
-    const existingLock = parseSkillLock(await readFile(lockPath, 'utf8'));
+    const lockPath = join(project.agentsDir, "skills.lock.yml");
+    const existingLock = parseSkillLock(await readFile(lockPath, "utf8"));
     const nextLock: SkillLock = {
       lockfileVersion: 1,
       registry: registry.origin,
@@ -147,17 +160,20 @@ export async function pullSkills(
     };
     const installed: Array<{ id: string; version: string }> = [];
 
-    for (const declaration of declarations.skills.filter((skill) => skill.enabled)) {
-      const [namespace, name] = declaration.id.split('/');
-      if (!namespace || !name) throw new Error(`Invalid skill id: ${declaration.id}`);
+    for (const declaration of declarations.skills.filter(
+      (skill) => skill.enabled,
+    )) {
+      const [namespace, name] = declaration.id.split("/");
+      if (!namespace || !name)
+        throw new Error(`Invalid skill id: ${declaration.id}`);
       const url = new URL(
         `/api/v1/skills/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}/resolve`,
         registry,
       );
-      url.searchParams.set('version', declaration.version);
+      url.searchParams.set("version", declaration.version);
       const response = await fetch(url, {
-        headers: authorizationHeaders(env),
-        redirect: 'follow',
+        headers: authorizationHeaders(token),
+        redirect: "error",
       });
       if (!response.ok) {
         throw new Error(
@@ -165,15 +181,21 @@ export async function pullSkills(
         );
       }
       if (new URL(response.url).origin !== registry.origin) {
-        throw new Error(`Registry redirect left the configured origin for ${declaration.id}`);
+        throw new Error(
+          `Registry redirect left the configured origin for ${declaration.id}`,
+        );
       }
       const resolved = (await response.json()) as ResolvedSkillResponse;
       const bundle = validateSkillBundle(resolved.bundle);
       if (resolved.id !== declaration.id || bundle.id !== declaration.id) {
-        throw new Error(`Registry returned the wrong skill for ${declaration.id}`);
+        throw new Error(
+          `Registry returned the wrong skill for ${declaration.id}`,
+        );
       }
       if (resolved.version !== bundle.version) {
-        throw new Error(`Registry version and bundle version disagree for ${declaration.id}`);
+        throw new Error(
+          `Registry version and bundle version disagree for ${declaration.id}`,
+        );
       }
       const integrity = integrityForBundle(bundle);
       if (integrity !== resolved.integrity) {
@@ -181,7 +203,9 @@ export async function pullSkills(
       }
       const resolvedUrl = new URL(resolved.resolved, registry);
       if (resolvedUrl.origin !== registry.origin) {
-        throw new Error('Resolved skill URL left the configured registry origin');
+        throw new Error(
+          "Resolved skill URL left the configured registry origin",
+        );
       }
 
       await installBundle(project.agentsDir, bundle);
@@ -191,23 +215,23 @@ export async function pullSkills(
         resolved: resolvedUrl.toString(),
       };
       installed.push({ id: declaration.id, version: bundle.version });
-      await history.record('skill.pulled', {
+      await history.record("skill.pulled", {
         path: `agents/skillib/${declaration.id}`,
         payload: { id: declaration.id, version: bundle.version, integrity },
       });
     }
 
     const lockContent = toYaml(nextLock);
-    const lockRelativePath = 'agents/skills.lock.yml';
+    const lockRelativePath = "agents/skills.lock.yml";
     const lockIntegrity = contentIntegrity(lockContent);
-    await history.record('tool.write.planned', {
+    await history.record("tool.write.planned", {
       path: lockRelativePath,
-      payload: { integrity: lockIntegrity, reason: 'skill-lock-update' },
+      payload: { integrity: lockIntegrity, reason: "skill-lock-update" },
     });
     await writeAtomically(lockPath, lockContent);
-    await history.record('tool.write.completed', {
+    await history.record("tool.write.completed", {
       path: lockRelativePath,
-      payload: { integrity: lockIntegrity, reason: 'skill-lock-update' },
+      payload: { integrity: lockIntegrity, reason: "skill-lock-update" },
     });
     return installed;
   } finally {
@@ -220,6 +244,7 @@ export async function pushSkill(input: {
   directory: string;
   id: string;
   version: string;
+  visibility?: "public" | "private";
   env?: NodeJS.ProcessEnv;
 }): Promise<{ id: string; version: string; integrity: string }> {
   const project = await discoverProject(input.cwd ?? process.cwd());
@@ -230,15 +255,17 @@ export async function pushSkill(input: {
   try {
     const env = input.env ?? process.env;
     const registry = registryUrlFromEnv(config.registry.urlEnv, env);
-    const token = env.AGENTICK_TOKEN;
+    const token = await resolveRegistryToken(project, registry, env);
     if (!token) {
-      throw new Error('AGENTICK_TOKEN is required to publish a skill');
+      throw new Error(
+        "Publishing requires a registry login. Create a token on the site and run `agentick login`.",
+      );
     }
-    const skillSourceRoot = resolve(project.agentsDir, 'skills');
+    const skillSourceRoot = resolve(project.agentsDir, "skills");
     const sourceDirectory = resolve(project.root, input.directory);
     const relativeSource = relative(skillSourceRoot, sourceDirectory);
-    if (relativeSource.startsWith('..') || isAbsolute(relativeSource)) {
-      throw new Error('Published skill sources must live under agents/skills/');
+    if (relativeSource.startsWith("..") || isAbsolute(relativeSource)) {
+      throw new Error("Published skill sources must live under agents/skills/");
     }
     const bundle = await createSkillBundle({
       directory: sourceDirectory,
@@ -246,30 +273,140 @@ export async function pushSkill(input: {
       version: input.version,
     });
     const integrity = integrityForBundle(bundle);
-    const [namespace, name] = input.id.split('/');
+    const [namespace, name] = input.id.split("/");
     if (!namespace || !name) throw new Error(`Invalid skill id: ${input.id}`);
     const url = new URL(
       `/api/v1/skills/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}/versions`,
       registry,
     );
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
         authorization: `Bearer ${token}`,
-        'content-type': 'application/json',
+        "content-type": "application/json",
       },
-      body: JSON.stringify({ bundle, integrity }),
-      redirect: 'error',
+      body: JSON.stringify({
+        bundle,
+        integrity,
+        visibility: input.visibility ?? "public",
+      }),
+      redirect: "error",
     });
     if (!response.ok) {
-      throw new Error(`Skill publish failed: ${response.status} ${await response.text()}`);
+      throw new Error(
+        `Skill publish failed: ${response.status} ${await response.text()}`,
+      );
     }
-    await history.record('skill.published', {
-      path: `agents/skills/${relativeSource.replaceAll('\\', '/')}`,
+    await history.record("skill.published", {
+      path: `agents/skills/${relativeSource.replaceAll("\\", "/")}`,
       payload: { id: input.id, version: input.version, integrity },
     });
     return { id: input.id, version: input.version, integrity };
   } finally {
     history.close();
   }
+}
+
+export async function addSkillDeclaration(input: {
+  cwd?: string;
+  id: string;
+  version?: string;
+}): Promise<{ id: string; version: string }> {
+  const project = await discoverProject(input.cwd ?? process.cwd());
+  const path = join(project.agentsDir, "skills.yml");
+  const declaration = parseSkillDeclaration(await readFile(path, "utf8"));
+  const id = input.id.trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9-]*\/[a-z0-9][a-z0-9-]*$/.test(id)) {
+    throw new Error("Skill id must use namespace/name");
+  }
+  const version = input.version?.trim() || "latest";
+  const existing = declaration.skills.find((skill) => skill.id === id);
+  if (existing) {
+    existing.version = version;
+    existing.enabled = true;
+  } else {
+    declaration.skills.push({ id, version, enabled: true });
+    declaration.skills.sort((left, right) => left.id.localeCompare(right.id));
+  }
+  const content = toYaml(declaration);
+  const integrity = contentIntegrity(content);
+  const history = new HistoryStore(project);
+  await history.record("tool.write.planned", {
+    path: "agents/skills.yml",
+    payload: { integrity, reason: "skill-declaration-update" },
+  });
+  await writeAtomically(path, content);
+  await history.record("tool.write.completed", {
+    path: "agents/skills.yml",
+    payload: { integrity, reason: "skill-declaration-update" },
+  });
+  await history.record("skill.declared", {
+    path: "agents/skills.yml",
+    payload: { id, version },
+  });
+  history.close();
+  return { id, version };
+}
+
+export async function removeSkillDeclaration(
+  id: string,
+  cwd = process.cwd(),
+): Promise<boolean> {
+  const project = await discoverProject(cwd);
+  id = id.trim().toLowerCase();
+  const declarationPath = join(project.agentsDir, "skills.yml");
+  const lockPath = join(project.agentsDir, "skills.lock.yml");
+  const declaration = parseSkillDeclaration(
+    await readFile(declarationPath, "utf8"),
+  );
+  const before = declaration.skills.length;
+  declaration.skills = declaration.skills.filter((skill) => skill.id !== id);
+  if (declaration.skills.length === before) return false;
+  const lock = parseSkillLock(await readFile(lockPath, "utf8"));
+  delete lock.skills[id];
+  const [namespace, name] = id.split("/");
+  if (namespace && name) {
+    const target = join(project.agentsDir, "skillib", namespace, name);
+    await makeWritable(target);
+    await rm(target, { recursive: true, force: true });
+  }
+  const declarationContent = toYaml(declaration);
+  const lockContent = toYaml(lock);
+  const history = new HistoryStore(project);
+  await history.record("tool.write.planned", {
+    path: "agents/skills.yml",
+    payload: {
+      integrity: contentIntegrity(declarationContent),
+      reason: "skill-declaration-remove",
+    },
+  });
+  await history.record("tool.write.planned", {
+    path: "agents/skills.lock.yml",
+    payload: {
+      integrity: contentIntegrity(lockContent),
+      reason: "skill-lock-remove",
+    },
+  });
+  await writeAtomically(declarationPath, declarationContent);
+  await writeAtomically(lockPath, lockContent);
+  await history.record("tool.write.completed", {
+    path: "agents/skills.yml",
+    payload: {
+      integrity: contentIntegrity(declarationContent),
+      reason: "skill-declaration-remove",
+    },
+  });
+  await history.record("tool.write.completed", {
+    path: "agents/skills.lock.yml",
+    payload: {
+      integrity: contentIntegrity(lockContent),
+      reason: "skill-lock-remove",
+    },
+  });
+  await history.record("skill.removed", {
+    path: `agents/skillib/${id}`,
+    payload: { id },
+  });
+  history.close();
+  return true;
 }

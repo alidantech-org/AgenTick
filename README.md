@@ -35,13 +35,19 @@ agentick verify [--no-commands]
 agentick watch [--port 4317]
 agentick status
 agentick history
-agentick skills
+agentick skill list
+agentick skill add namespace/review-skill@2.1.0
+agentick skill remove namespace/review-skill
 agentick pull
-agentick push agents/skills/my-skill --id namespace/my-skill --version 1.0.0
+agentick login
+agentick whoami
+agentick push agents/skills/my-skill --id namespace/my-skill --version 1.0.0 --visibility private
 ```
 
 `pull` requires the registry URL environment variable configured in
-`agents/agentick.yml`. `push` additionally requires `AGENTICK_TOKEN`.
+`agents/agentick.yml`. Public pulls are anonymous. Private pulls and publishing
+use `AGENTICK_TOKEN` or the project credential saved by `agentick login` in the
+git-ignored `agents/.agentick/auth.json` file.
 
 ## Development
 
@@ -54,4 +60,4 @@ pnpm --filter @alidantech/agentick build
 node packages/agentick/dist/cli/index.js init
 ```
 
-Tracking: issue #1.
+The current registry and account milestone is tracked in issue #3 and PR #2.

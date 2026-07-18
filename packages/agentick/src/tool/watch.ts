@@ -1,11 +1,11 @@
-import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { join, matchesGlob, relative, resolve } from 'node:path';
-import chokidar from 'chokidar';
-import Fastify from 'fastify';
-import type { AgentickEvent } from '@alidantech/agentick-shared';
-import { discoverProject, loadProjectConfig } from './project.js';
-import { HistoryStore } from './history.js';
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { join, matchesGlob, relative, resolve } from "node:path";
+import chokidar from "chokidar";
+import Fastify from "fastify";
+import type { AgentickEvent } from "@alidantech/agentick-shared";
+import { discoverProject, loadProjectConfig } from "./project.js";
+import { HistoryStore } from "./history.js";
 
 export interface WatchRuntime {
   close(): Promise<void>;
@@ -13,16 +13,18 @@ export interface WatchRuntime {
 }
 
 function normalizePath(path: string): string {
-  return path.replaceAll('\\', '/').replace(/^\.\//, '');
+  return path.replaceAll("\\", "/").replace(/^\.\//, "");
 }
 
 function matchesAny(path: string, patterns: readonly string[]): boolean {
   const normalized = normalizePath(path);
-  return patterns.some((pattern) => matchesGlob(normalized, normalizePath(pattern)));
+  return patterns.some((pattern) =>
+    matchesGlob(normalized, normalizePath(pattern)),
+  );
 }
 
 function bytesIntegrity(content: Uint8Array): string {
-  return `sha512-${createHash('sha512').update(content).digest('base64')}`;
+  return `sha512-${createHash("sha512").update(content).digest("base64")}`;
 }
 
 export async function watchProject(
@@ -40,7 +42,7 @@ export async function watchProject(
   };
 
   const recordFileEvent = async (
-    type: 'file.added' | 'file.changed' | 'file.removed',
+    type: "file.added" | "file.changed" | "file.removed",
     watchedPath: string,
   ): Promise<void> => {
     const relativePath = normalizePath(
@@ -53,13 +55,13 @@ export async function watchProject(
       const recent = (await history.recent(100)).reverse();
       const permit = recent.find(
         (candidate) =>
-          candidate.type === 'tool.write.planned' &&
+          candidate.type === "tool.write.planned" &&
           candidate.path === relativePath &&
           Date.now() - Date.parse(candidate.timestamp) < 30_000,
       );
-      let permitted = type === 'file.removed' && Boolean(permit);
+      let permitted = type === "file.removed" && Boolean(permit);
       const expectedIntegrity = permit?.payload?.integrity;
-      if (!permitted && typeof expectedIntegrity === 'string') {
+      if (!permitted && typeof expectedIntegrity === "string") {
         try {
           const current = await readFile(join(project.root, relativePath));
           permitted = bytesIntegrity(current) === expectedIntegrity;
@@ -70,13 +72,13 @@ export async function watchProject(
 
       if (!permitted) {
         const { event: findingEvent } = await history.createFinding({
-          severity: 'critical',
-          rule: 'agents.protected-file-changed',
+          severity: "critical",
+          rule: "agents.protected-file-changed",
           path: relativePath,
           message: `Protected project instruction changed during an active watch session: ${relativePath}`,
           evidence: [type],
           suggestedAction:
-            'Restore the protected file or record a separately authorized governance change.',
+            "Restore the protected file or record a separately authorized governance change.",
         });
         publish(findingEvent);
       }
@@ -89,31 +91,35 @@ export async function watchProject(
     ignoreInitial: true,
     persistent: true,
   });
-  watcher.on('add', (path) => void recordFileEvent('file.added', path));
-  watcher.on('change', (path) => void recordFileEvent('file.changed', path));
-  watcher.on('unlink', (path) => void recordFileEvent('file.removed', path));
+  watcher.on("add", (path) => void recordFileEvent("file.added", path));
+  watcher.on("change", (path) => void recordFileEvent("file.changed", path));
+  watcher.on("unlink", (path) => void recordFileEvent("file.removed", path));
 
   const server = Fastify({ logger: false });
-  server.get('/health', async () => ({
+  server.get("/health", async () => ({
     ok: true,
     project: config.project.name,
     sessionId: history.sessionId,
   }));
-  server.get('/api/events', async () => ({ events: await history.recent(200) }));
-  server.get('/api/findings', async () => ({ findings: history.findings(200) }));
-  server.get('/events', async (_request, reply) => {
-    reply.raw.setHeader('Content-Type', 'text/event-stream');
-    reply.raw.setHeader('Cache-Control', 'no-cache');
-    reply.raw.setHeader('Connection', 'keep-alive');
+  server.get("/api/events", async () => ({
+    events: await history.recent(200),
+  }));
+  server.get("/api/findings", async () => ({
+    findings: history.findings(200),
+  }));
+  server.get("/events", async (_request, reply) => {
+    reply.raw.setHeader("Content-Type", "text/event-stream");
+    reply.raw.setHeader("Cache-Control", "no-cache");
+    reply.raw.setHeader("Connection", "keep-alive");
     const send = (event: AgentickEvent): void => {
       reply.raw.write(`data: ${JSON.stringify(event)}\n\n`);
     };
     clients.add(send);
-    reply.raw.on('close', () => clients.delete(send));
+    reply.raw.on("close", () => clients.delete(send));
     return reply.hijack();
   });
-  server.get('/', async (_request, reply) =>
-    reply.type('text/html').send(`<!doctype html>
+  server.get("/", async (_request, reply) =>
+    reply.type("text/html").send(`<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>AgenTick</title><style>
 body{font-family:ui-sans-serif,system-ui;margin:0;background:#0b1020;color:#e8ecf4}
@@ -135,12 +141,12 @@ const stream=new EventSource('/events');stream.onmessage=e=>{const event=JSON.pa
 
   const port = portOverride ?? config.runtime.port;
   await server.listen({ host: config.runtime.host, port });
-  await history.record('session.started', { payload: { port } });
+  await history.record("session.started", { payload: { port } });
 
   return {
     url: `http://${config.runtime.host}:${port}`,
     async close() {
-      await history.record('session.stopped');
+      await history.record("session.stopped");
       await watcher.close();
       await server.close();
       history.close();

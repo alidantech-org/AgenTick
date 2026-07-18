@@ -1,13 +1,13 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { execa } from 'execa';
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { execa } from "execa";
 import {
   parseSkillDeclaration,
   parseSkillLock,
-} from '@alidantech/agentick-config';
-import type { AgentickEvent } from '@alidantech/agentick-shared';
-import { HistoryStore } from './history.js';
-import { discoverProject, loadProjectConfig } from './project.js';
+} from "@alidantech/agentick-config";
+import type { AgentickEvent } from "@alidantech/agentick-shared";
+import { HistoryStore } from "./history.js";
+import { discoverProject, loadProjectConfig } from "./project.js";
 
 export interface ProjectStatus {
   root: string;
@@ -22,11 +22,11 @@ export async function inspectProject(
 ): Promise<ProjectStatus> {
   const project = await discoverProject(cwd);
   const config = await loadProjectConfig(project);
-  const branch = await execa('git', ['branch', '--show-current'], {
+  const branch = await execa("git", ["branch", "--show-current"], {
     cwd: project.root,
     reject: false,
   });
-  const status = await execa('git', ['status', '--porcelain'], {
+  const status = await execa("git", ["status", "--porcelain"], {
     cwd: project.root,
     reject: false,
   });
@@ -36,8 +36,8 @@ export async function inspectProject(
   return {
     root: project.root,
     project: config.project.name,
-    branch: branch.stdout.trim() || '(detached)',
-    dirtyFiles: status.stdout.split('\n').filter(Boolean).length,
+    branch: branch.stdout.trim() || "(detached)",
+    dirtyFiles: status.stdout.split("\n").filter(Boolean).length,
     recentEvents,
   };
 }
@@ -53,10 +53,10 @@ export async function listProjectSkills(cwd = process.cwd()): Promise<
 > {
   const project = await discoverProject(cwd);
   const declarations = parseSkillDeclaration(
-    await readFile(join(project.agentsDir, 'skills.yml'), 'utf8'),
+    await readFile(join(project.agentsDir, "skills.yml"), "utf8"),
   );
   const lock = parseSkillLock(
-    await readFile(join(project.agentsDir, 'skills.lock.yml'), 'utf8'),
+    await readFile(join(project.agentsDir, "skills.lock.yml"), "utf8"),
   );
   return declarations.skills.map((skill) => {
     const locked = lock.skills[skill.id];

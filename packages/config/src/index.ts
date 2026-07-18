@@ -1,28 +1,30 @@
-import { parse, stringify } from 'yaml';
-import { z } from 'zod';
+import { parse, stringify } from "yaml";
+import { z } from "zod";
 
 export const DEFAULT_IGNORES = [
-  '**/.git/**',
-  '**/node_modules/**',
-  '**/dist/**',
-  '**/build/**',
-  '**/coverage/**',
-  '**/.next/**',
-  '**/.turbo/**',
-  'agents/skillib/**',
-  'agents/.agentick/**',
+  "**/.git/**",
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/coverage/**",
+  "**/.next/**",
+  "**/.turbo/**",
+  "agents/skillib/**",
+  "agents/.agentick/**",
 ] as const;
 
 const pathPattern = z.string().min(1);
 
-const exactSemver = z.string().regex(
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/,
-  'Expected an exact semantic version',
-);
+const exactSemver = z
+  .string()
+  .regex(
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/,
+    "Expected an exact semantic version",
+  );
 
 export const agentickConfigSchema = z.object({
   version: z.literal(1),
-  project: z.object({ name: z.string().min(1), root: z.literal('.') }),
+  project: z.object({ name: z.string().min(1), root: z.literal(".") }),
   watch: z.object({
     include: z.array(pathPattern).min(1),
     ignore: z.array(pathPattern),
@@ -41,14 +43,14 @@ export const agentickConfigSchema = z.object({
     ),
   }),
   runtime: z.object({
-    host: z.string().default('127.0.0.1'),
+    host: z.string().default("127.0.0.1"),
     port: z.number().int().min(1).max(65535).default(4317),
   }),
   registry: z.object({
-    urlEnv: z.string().min(1).default('AGENTICK_REGISTRY_URL'),
+    urlEnv: z.string().min(1).default("AGENTICK_REGISTRY_URL"),
   }),
   skilllib: z.object({
-    directory: z.literal('agents/skillib').default('agents/skillib'),
+    directory: z.literal("agents/skillib").default("agents/skillib"),
     requireIntegrity: z.literal(true).default(true),
     executeInstalledScripts: z.literal(false).default(false),
   }),
