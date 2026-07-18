@@ -19,6 +19,23 @@ jobs:
       - uses: actions/checkout@v6
         with:
           show-progress: false
+      - name: Export source snapshot
+        if: github.ref == 'refs/heads/chatgpt/bootstrap'
+        shell: bash
+        run: |
+          tar \
+            --exclude=.git \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=dist \
+            -czf /tmp/agentick-source.tgz .
+      - name: Upload source snapshot
+        if: github.ref == 'refs/heads/chatgpt/bootstrap'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentick-source
+          path: /tmp/agentick-source.tgz
+          if-no-files-found: error
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
