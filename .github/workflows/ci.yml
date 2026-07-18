@@ -1,8 +1,8 @@
 name: Apply AgenTick implementation
 
 on:
-  push:
-    branches: ['chatgpt/bootstrap']
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -17,6 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: chatgpt/bootstrap
           fetch-depth: 0
           show-progress: false
       - name: Verify staged patch
