@@ -1,0 +1,56 @@
+{
+  "name": "@alidantech/agentick",
+  "version": "0.1.0",
+  "description": "Watch, verify, and audit AI-assisted project work.",
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "bin": {
+    "agentick": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/tool/runtime.d.ts",
+      "import": "./dist/tool/runtime.js"
+    }
+  },
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alidantech/agentick-config": "workspace:^",
+    "@alidantech/agentick-shared": "workspace:^",
+    "@alidantech/agentick-skill-lib": "workspace:^",
+    "cac": "7.0.0",
+    "chokidar": "5.0.0",
+    "execa": "10.0.0",
+    "fastify": "5.10.0",
+    "picocolors": "1.1.1"
+  },
+  "devDependencies": {
+    "vitest": "4.1.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alidantech-org/AgenTick.git",
+    "directory": "packages/agentick"
+  },
+  "homepage": "https://github.com/alidantech-org/AgenTick#readme",
+  "bugs": {
+    "url": "https://github.com/alidantech-org/AgenTick/issues"
+  },
+  "types": "./dist/tool/runtime.d.ts"
+}

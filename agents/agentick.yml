@@ -1,0 +1,50 @@
+version: 1
+project:
+  name: agentick
+  root: .
+watch:
+  include:
+  - apps/**
+  - packages/**
+  - docs/**
+  - agents/**
+  ignore:
+  - '**/.git/**'
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/.next/**'
+  - '**/.turbo/**'
+  - agents/skillib/**
+  - agents/.agentick/**
+agents:
+  protected:
+  - agents/agentick.yml
+  - agents/AGENTS.md
+  - agents/README.md
+  - agents/INSTRUCTIONS.md
+  - agents/rules/**
+  - agents/architecture/**
+  - agents/workflows/**
+  - agents/patterns/**
+  - agents/templates/**
+  - agents/skills.yml
+  - agents/skills.lock.yml
+  writable:
+  - agents/work/**
+verify:
+  commands:
+  - name: typecheck
+    run: pnpm typecheck
+    required: true
+  - name: tests
+    run: pnpm test
+    required: true
+runtime:
+  host: 127.0.0.1
+  port: 4317
+registry:
+  urlEnv: AGENTICK_REGISTRY_URL
+skilllib:
+  directory: agents/skillib
+  requireIntegrity: true
+  executeInstalledScripts: false
