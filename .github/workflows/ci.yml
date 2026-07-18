@@ -27,12 +27,14 @@ jobs:
           cat .agentick-update/patch.b64.* | base64 --decode > /tmp/agentick.patch.xz
           echo 'bceebb19f19dd4b51da6a7748ea6908afbc9de7808479b93e713be93868313da  /tmp/agentick.patch.xz' | sha256sum --check
           xz --decompress --stdout /tmp/agentick.patch.xz > /tmp/agentick.patch
+          base64 --decode .agentick-update/fix.patch.b64 > /tmp/agentick-fix.patch
       - name: Apply source update
         shell: bash
         run: |
           set -euo pipefail
           git reset --hard 1052082f4f42a496f8ffcb65c4ae74c0508a6c0c
           patch --batch --forward -p1 < /tmp/agentick.patch
+          patch --batch --forward -p1 < /tmp/agentick-fix.patch
           test -z "$(find . -name '*.rej' -print -quit)"
       - uses: actions/setup-node@v6
         with:
