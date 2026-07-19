@@ -1,0 +1,20 @@
+node_modules/
+.pnpm-store/
+dist/
+.next/
+coverage/
+.env*.local
+apps/site/data/
+*.db
+*.db-shm
+*.db-wal
+*.tsbuildinfo
+
+# >>> AgenTick managed >>>
+/agents/skillib/
+/agents/.agentick/
+# <<< AgenTick managed <<<
+
+agentick.db
+
+.turbo/

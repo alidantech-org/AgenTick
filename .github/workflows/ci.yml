@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "chatgpt/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          show-progress: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: corepack enable
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pnpm install --frozen-lockfile > /tmp/agentick-install.log 2>&1
+      - name: Format check
+        shell: bash
+        run: |
+          pnpm format:check > /tmp/agentick-format.log 2>&1
+      - name: Typecheck
+        shell: bash
+        run: |
+          pnpm typecheck > /tmp/agentick-typecheck.log 2>&1
+      - name: Test
+        shell: bash
+        run: |
+          pnpm test > /tmp/agentick-test.log 2>&1
+      - name: Build
+        shell: bash
+        run: |
+          pnpm build > /tmp/agentick-build.log 2>&1
+      - name: Runtime smoke
+        shell: bash
+        env:
+          DATABASE_URL: file:/tmp/agentick-ci.db
+          AUTH_SECRET: agentick-ci-auth-secret
+          AGENTICK_TOKEN_PEPPER: agentick-ci-token-pepper
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+        run: |
+          pnpm --filter @alidantech/agentick-site exec next start --hostname 127.0.0.1 --port 3100 > /tmp/agentick-runtime.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3100/api/health > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/agentick-runtime.log
+            exit 1
+          fi
+          for path in / /skills /login /api/health; do
+            curl -fsS "http://127.0.0.1:3100${path}" > /dev/null
+          done
+      - name: Upload failed command logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics
+          path: /tmp/agentick-*.log
+          if-no-files-found: ignore

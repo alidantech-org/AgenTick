@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "types": ["node"],
+    "paths": {
+      "@alidantech/agentick-config": ["./packages/config/src/index.ts"],
+      "@alidantech/agentick-shared": ["./packages/shared/src/index.ts"],
+      "@alidantech/agentick-skill-lib": ["./packages/skill-lib/src/index.ts"],
+      "@alidantech/agentick-ui": ["./packages/ui/src/index.ts"]
+    }
+  }
+}

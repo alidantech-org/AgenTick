@@ -1,0 +1,47 @@
+{
+  "name": "@alidantech/agentick-skill-lib",
+  "version": "0.1.0",
+  "description": "Agent Skills validation and registry primitives for AgenTick.",
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "yaml": "2.9.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "vitest": "4.1.10"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alidantech-org/AgenTick.git",
+    "directory": "packages/skill-lib"
+  },
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "homepage": "https://github.com/alidantech-org/AgenTick#readme",
+  "bugs": {
+    "url": "https://github.com/alidantech-org/AgenTick/issues"
+  }
+}
