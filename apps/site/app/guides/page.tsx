@@ -76,10 +76,10 @@ export default function GuidesPage() {
             <span>05</span>
             <h2>CLI quickstart</h2>
             <pre className="guide-code">
-              pnpm dlx @alidantech/agentick init{`\n`}agentick watch{`\n`}
-              agentick verify{`\n\n`}# authenticate with a token created in
-              /account{`\n`}agentick login{`\n`}agentick pull{`\n`}agentick
-              skill add johnte/backend-review@2.3.1{`\n`}agentick push
+              pnpm dlx agentick init{`\n`}agentick watch{`\n`}agentick verify
+              {`\n\n`}# authenticate with a token created in /account{`\n`}
+              agentick login{`\n`}agentick pull{`\n`}agentick skill add
+              johnte/backend-review@2.3.1{`\n`}agentick push
               agents/skills/my-skill --id your-handle/my-skill --version 1.0.0
               --visibility private
             </pre>
