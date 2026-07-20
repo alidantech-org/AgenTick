@@ -1,12 +1,17 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  Braces,
   Check,
-  CircleAlert,
-  RefreshCcw,
+  CircleDot,
+  GitBranch,
+  Library,
+  LockKeyhole,
+  Radar,
   Search,
-  Sigma,
-  TextQuote,
+  ShieldCheck,
+  Sparkles,
+  Terminal,
 } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { RegistrySearch } from "@/components/registry-search";
@@ -14,426 +19,281 @@ import { SkillCard } from "@/components/skill-card";
 import { Button } from "@/components/ui/button";
 import { searchPublicSkills } from "@/lib/registry/service";
 
-const values = [
+const capabilities = [
   {
-    icon: CircleAlert,
-    title: "Don’t let AI quietly destroy your codebase.",
-    copy: "Watch protected files, project boundaries, task scope, verification commands, and the evidence behind every completion claim.",
-    note: "scope drift detected · blocked before handoff",
+    icon: Radar,
+    title: "Live repository watching",
+    copy: "Observe real filesystem changes, protected files, Git state, and verification evidence while AI works.",
   },
   {
-    icon: TextQuote,
-    title: "Stop leaving your best prompts in chat history.",
-    copy: "Package repeatable expertise as Agent Skills, publish immutable versions, and pull them into any project with integrity checks.",
+    icon: ShieldCheck,
+    title: "Project-owned rules",
+    copy: "Keep architecture, workflows, templates, patterns, and active work inside one self-contained agents/ directory.",
   },
   {
-    icon: RefreshCcw,
-    title: "Become genuinely better at coding with AI.",
-    copy: "Turn audits, patterns, and project rules into a feedback loop that improves both developer judgment and agent output.",
+    icon: Library,
+    title: "Versioned skill registry",
+    copy: "Publish reusable Agent Skills under personal or organisation namespaces with immutable versions and integrity checks.",
   },
   {
-    icon: Sigma,
-    title: "Make every token produce useful progress.",
-    copy: "Less repeated context, fewer speculative rewrites, clearer next steps, and verifiable work that survives beyond one conversation.",
+    icon: Check,
+    title: "Evidence-first verification",
+    copy: "Turn commands, findings, fixes, and completion claims into an auditable history instead of trusting summaries.",
+  },
+  {
+    icon: GitBranch,
+    title: "Scope and plan tracking",
+    copy: "Compare intended work against the actual diff and surface protected-boundary or task-scope drift early.",
+  },
+  {
+    icon: LockKeyhole,
+    title: "Public and private skills",
+    copy: "Share community skills publicly while keeping internal workflows private to your account or organisation.",
   },
 ];
 
-const workflow = [
-  [
-    "Specify",
-    "Describe the project",
-    "Keep architecture, rules, patterns, templates, and active work entirely inside agents/.",
-  ],
-  [
-    "Watch",
-    "Watch the work",
-    "Capture file events, Git state, protected changes, findings, commands, and audit history as coding happens.",
-  ],
-  [
-    "Verify",
-    "Verify the result",
-    "Run deterministic checks and require evidence before a task is considered complete.",
-  ],
-  [
-    "Share",
-    "Share what works",
-    "Publish public or private skills under your personal or organisation namespace.",
-  ],
+const foundation = [
+  ["01", "Specify", "Describe how this repository must be changed, verified, and handed off."],
+  ["02", "Watch", "Capture file activity and findings as work happens, not after context is lost."],
+  ["03", "Verify", "Run deterministic project checks and preserve their real output as evidence."],
+  ["04", "Share", "Package reliable workflows as installable, integrity-pinned skills."],
 ] as const;
 
-const guides = [
-  [
-    "01",
-    "Keep control",
-    "Don’t let AI leave your repository in a mess.",
-    "/guides#control",
-  ],
-  [
-    "02",
-    "Publish your skills",
-    "Don’t let valuable prompting expertise disappear.",
-    "/guides#skills",
-  ],
-  [
-    "03",
-    "Improve productivity",
-    "Upskill while you automate.",
-    "/guides#productivity",
-  ],
-  [
-    "04",
-    "Make tokens count",
-    "Keep context stable and verification deterministic.",
-    "/guides#tokens",
-  ],
-] as const;
+const outcomes = [
+  "Stop hidden prompt knowledge from disappearing in chat history.",
+  "Keep coding AI from silently weakening architecture or verification.",
+  "Build reusable skill libraries for individuals and engineering teams.",
+  "Spend fewer tokens re-explaining stable project context.",
+];
 
 export default async function HomePage() {
   const featured = await searchPublicSkills({ sort: "popular", limit: 3 });
 
   return (
     <main className="overflow-hidden">
-      <section className="border-b border-border">
-        <div className="page-shell grid gap-14 py-20 sm:py-28 lg:grid-cols-[1.05fr_.95fr] lg:items-start">
-          <div>
-            <div className="mb-6 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
-              <LogoMark size={18} /> Skill library — proof over promises
-            </div>
-            <h1 className="max-w-3xl font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-              Build with AI.
-              <br />
-              <span className="text-muted-foreground">Keep control.</span>
-            </h1>
-            <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Skillib watches every change, checks the work against your
-              project’s own rules, and turns hard-won prompting knowledge into
-              reusable, versioned skills.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <Link href="/signup">
-                  Start with Skillib <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" size="lg">
-                <Link href="/guides#cli">Read the quickstart</Link>
-              </Button>
-            </div>
-            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-3 font-mono text-xs text-muted-foreground">
-              {[
-                "Project-local rules",
-                "Immutable skill versions",
-                "Evidence-backed audits",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <Check className="size-4 text-foreground" /> {item}
-                </li>
-              ))}
-            </ul>
+      <section className="relative border-b border-border">
+        <div className="landing-grid pointer-events-none absolute inset-0" />
+        <div className="page-shell relative flex min-h-[760px] flex-col items-center justify-center py-24 text-center sm:py-32">
+          <div className="mb-8 flex size-24 items-center justify-center rounded-3xl border border-border bg-background sm:size-28">
+            <LogoMark size={68} />
           </div>
-
-          <div className="overflow-hidden rounded-[1.75rem] border border-border bg-primary text-primary-foreground">
-            <div className="flex items-center justify-between border-b border-primary-foreground/15 px-5 py-3">
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((dot) => (
-                  <span
-                    key={dot}
-                    className="size-2 rounded-full bg-primary-foreground/25"
-                  />
-                ))}
-              </div>
-              <span className="font-mono text-xs text-primary-foreground/50">
-                skillib — ~/your-project
-              </span>
-            </div>
-            <div className="space-y-1 px-5 py-6 font-mono text-[13px] leading-7 text-primary-foreground/75 sm:px-7">
-              <p>
-                <span className="text-primary-foreground/40">$</span>{" "}
-                <span className="text-primary-foreground">
-                  pnpm dlx skillib init
-                </span>
-              </p>
-              <p className="text-primary-foreground">
-                ✓ agents/ initialized without touching your source
-              </p>
-              <p>&nbsp;</p>
-              <p>
-                <span className="text-primary-foreground/40">$</span>{" "}
-                <span className="text-primary-foreground">skillib watch</span>
-              </p>
-              <p className="pl-4 text-primary-foreground/45">
-                watching 218 files · dashboard :4317
-              </p>
-              <p>&nbsp;</p>
-              <p>
-                <span className="text-primary-foreground/45">CHANGE</span>{" "}
-                <span className="font-semibold text-primary-foreground">
-                  src/modules/payments/service.ts
-                </span>
-              </p>
-              <p className="inline-flex rounded-md border border-primary-foreground/15 bg-primary-foreground/10 px-2 text-primary-foreground">
-                FINDING · protected boundary crossed
-              </p>
-              <p className="text-primary-foreground">
-                ✓ fixed · typecheck · tests · audit recorded
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-border bg-muted/45">
-        <div className="page-shell py-20">
-          <div className="max-w-2xl">
-            <span className="section-label">Skill registry</span>
-            <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Find the workflow your AI is missing.
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              Search public skills from individual developers and engineering
-              organisations.
-            </p>
-          </div>
-          <div className="mt-8 max-w-2xl">
-            <RegistrySearch />
-          </div>
-          <div className="mt-5 flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
-            <Search className="size-3.5" /> Popular:
-            {[
-              ["nextjs", "Next.js"],
-              ["backend", "Backend review"],
-              ["security", "Security"],
-              ["testing", "Testing"],
-            ].map(([query, label]) => (
-              <Link
-                key={query}
-                href={`/skills?q=${query}`}
-                className="rounded-full border border-border bg-background px-3 py-1.5 hover:border-foreground hover:text-foreground"
-              >
-                {label}
+          <p className="mb-5 font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            The accountable skill layer for coding AI
+          </p>
+          <h1 className="max-w-5xl font-display text-5xl font-bold leading-[0.95] tracking-[-0.055em] sm:text-7xl lg:text-[6.5rem]">
+            Build with AI.
+            <br />
+            <span className="text-muted-foreground">Keep the proof.</span>
+          </h1>
+          <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
+            Skillib watches project changes, verifies work against repository-owned
+            rules, and turns proven workflows into reusable, versioned skills.
+          </p>
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg" className="rounded-full px-7">
+              <Link href="/signup">
+                Get started <ArrowRight className="size-4" />
               </Link>
+            </Button>
+            <Button asChild variant="secondary" size="lg" className="rounded-full px-7">
+              <Link href="/guides">Read the guides</Link>
+            </Button>
+          </div>
+          <div className="mt-12 flex w-full max-w-xl items-center overflow-hidden rounded-xl border border-border bg-background text-left font-mono text-sm">
+            <span className="flex size-12 shrink-0 items-center justify-center border-r border-border text-muted-foreground">
+              <Terminal className="size-4" />
+            </span>
+            <code className="min-w-0 flex-1 truncate px-4 py-3">pnpm dlx skillib init</code>
+            <span className="hidden border-l border-border px-4 py-3 text-xs text-muted-foreground sm:block">
+              Copy
+            </span>
+          </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-x-7 gap-y-3 text-sm text-muted-foreground">
+            {[
+              "Project-local configuration",
+              "Live file watching",
+              "Immutable skill versions",
+            ].map((item) => (
+              <span key={item} className="inline-flex items-center gap-2">
+                <Check className="size-4 text-foreground" /> {item}
+              </span>
             ))}
           </div>
         </div>
       </section>
 
       <section className="border-b border-border">
-        <div className="page-shell py-20">
-          <div className="max-w-2xl">
-            <span className="section-label">Why Skillib</span>
-            <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              AI speed without the cleanup bill.
+        <div className="page-shell py-24 sm:py-32">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="section-label">What is in Skillib?</p>
+            <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
+              Everything needed to keep AI-assisted work understandable.
             </h2>
-            <p className="mt-4 text-muted-foreground">
-              Move quickly without letting context drift, silent shortcuts, or
-              invented completion claims leave your repository in a mess.
+            <p className="mt-5 text-lg leading-8 text-muted-foreground">
+              One project specification, one live watcher, one verification history,
+              and one package-style registry for skills that deserve to be reused.
             </p>
           </div>
-          <div className="mt-12 grid overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2 md:gap-px">
-            {values.map(({ icon: Icon, title, copy, note }) => (
-              <article
-                key={title}
-                className="flex min-h-72 flex-col bg-background p-8 transition-colors hover:bg-muted/35"
-              >
-                <div className="flex size-9 items-center justify-center rounded-md border border-foreground">
+          <div className="mt-16 grid overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2 lg:grid-cols-3 lg:gap-px">
+            {capabilities.map(({ icon: Icon, title, copy }) => (
+              <article key={title} className="group min-h-72 bg-background p-8 transition-colors hover:bg-muted/40">
+                <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-card">
                   <Icon className="size-4" />
                 </div>
-                <h3 className="mt-6 font-display text-xl font-bold tracking-tight">
-                  {title}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  {copy}
-                </p>
-                {note && (
-                  <code className="mt-auto w-fit rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                    {note}
-                  </code>
-                )}
+                <h3 className="mt-8 font-display text-xl font-semibold tracking-tight">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{copy}</p>
+                <ArrowRight className="mt-8 size-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground" />
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="border-b border-border">
-        <div className="page-shell py-20">
-          <div className="max-w-2xl">
-            <span className="section-label">One accountable workflow</span>
-            <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Rules, runtime, registry.
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              Skillib connects the project specification, live watcher, and
-              shared skill ecosystem without putting extra configuration in your
-              source root.
-            </p>
-          </div>
-          <div className="mt-12 grid gap-8 lg:grid-cols-4">
-            {workflow.map(([label, title, copy], index) => (
-              <article key={label} className="border-t border-border pt-5">
-                <div className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
-                  <span className="flex size-7 items-center justify-center rounded-full border border-foreground text-foreground">
-                    {index + 1}
-                  </span>
-                  {label}
-                </div>
-                <h3 className="mt-5 font-display text-lg font-bold">{title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  {copy}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-border bg-primary text-primary-foreground">
-        <div className="page-shell grid gap-10 py-20 lg:grid-cols-2">
-          <div>
-            <span className="font-mono text-xs uppercase tracking-[0.16em] text-primary-foreground/50">
-              Package-manager discipline
-            </span>
-            <h2 className="mt-4 max-w-xl font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Skills should install like dependencies, not copied snippets.
-            </h2>
-            <p className="mt-4 max-w-xl text-primary-foreground/65">
-              Declare what your project needs, lock exact immutable versions,
-              verify SHA-512 integrity, and keep installed skills in a generated
-              read-only library.
-            </p>
-            <Link
-              href="/guides#skills"
-              className="mt-6 inline-flex font-semibold underline decoration-primary-foreground/30 underline-offset-4"
-            >
-              See the skill format →
-            </Link>
-          </div>
-          <div className="grid overflow-hidden rounded-2xl border border-primary-foreground/15 sm:grid-cols-2">
-            <pre className="border-b border-primary-foreground/15 bg-primary-foreground/5 p-5 text-xs leading-6 sm:border-b-0 sm:border-r">
-              # agents/skills.yml{`\n`}version: 1{`\n`}skills:{`\n`} - id:
-              johnte/backend-review{`\n`} version: ^2.1.0{`\n`} enabled: true
-            </pre>
-            <pre className="bg-primary-foreground/5 p-5 text-xs leading-6">
-              $ skillib pull{`\n`}✓ resolved 2.3.1{`\n`}✓ sha512 integrity
-              verified{`\n`}✓ installed read-only
-            </pre>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-border">
-        <div className="page-shell py-20">
-          <div className="flex flex-wrap items-end justify-between gap-4">
+      <section className="border-b border-border bg-muted/35">
+        <div className="page-shell py-24 sm:py-32">
+          <div className="grid gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
-              <span className="section-label">From the registry</span>
-              <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                Skills worth reusing.
+              <p className="section-label">Live project runtime</p>
+              <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
+                See what changed before the handoff says everything is done.
               </h2>
+              <p className="mt-5 text-lg leading-8 text-muted-foreground">
+                Skillib records the actual filesystem activity, findings, verification
+                runs, and session history behind AI-assisted implementation.
+              </p>
+              <Button asChild variant="secondary" className="mt-8 rounded-full">
+                <Link href="/guides#watch">Explore watch mode</Link>
+              </Button>
             </div>
-            <Link
-              href="/skills"
-              className="font-semibold underline decoration-border underline-offset-4"
-            >
-              Explore all skills →
-            </Link>
+            <div className="overflow-hidden rounded-2xl border border-border bg-[#0a0a0a] text-white">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <div className="flex items-center gap-2 text-xs text-white/50">
+                  <CircleDot className="size-3.5" /> live session
+                </div>
+                <span className="font-mono text-xs text-white/40">127.0.0.1:4317</span>
+              </div>
+              <div className="space-y-4 p-6 font-mono text-sm leading-6 sm:p-8">
+                <p><span className="text-white/40">$</span> skillib watch</p>
+                <p className="text-emerald-400">✓ watcher ready · 218 files indexed</p>
+                <div className="border-l border-white/15 pl-4 text-white/65">
+                  <p>CHANGE&nbsp;&nbsp;src/modules/payments/service.ts</p>
+                  <p>CHANGE&nbsp;&nbsp;agents/work/STATUS.md</p>
+                  <p className="text-amber-300">FINDING&nbsp;protected rule modified</p>
+                  <p className="text-emerald-400">FIXED&nbsp;&nbsp;&nbsp;typecheck and audit passed</p>
+                </div>
+                <p className="text-white/45">events appended to agents/.skillib/events.jsonl</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border">
+        <div className="page-shell py-24 sm:py-32">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="section-label">Built on a practical workflow</p>
+            <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
+              From repository rules to reusable skills.
+            </h2>
+          </div>
+          <div className="mt-16 grid border-y border-border md:grid-cols-2 lg:grid-cols-4">
+            {foundation.map(([number, title, copy], index) => (
+              <article key={title} className={`p-7 lg:min-h-72 ${index > 0 ? "border-t border-border md:border-l md:border-t-0" : ""} ${index === 2 ? "md:border-l-0 lg:border-l" : ""}`}>
+                <span className="font-mono text-xs text-muted-foreground">{number}</span>
+                <h3 className="mt-10 font-display text-2xl font-semibold">{title}</h3>
+                <p className="mt-4 text-sm leading-7 text-muted-foreground">{copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-foreground text-background">
+        <div className="page-shell py-24 sm:py-32">
+          <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
+            <div>
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-background/50">Package-manager discipline</p>
+              <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
+                Skills install like dependencies, not copied snippets.
+              </h2>
+              <p className="mt-5 max-w-xl text-lg leading-8 text-background/65">
+                Declare required skills, resolve exact immutable versions, verify
+                SHA-512 integrity, and install them into a generated read-only library.
+              </p>
+              <Link href="/guides#skills" className="mt-8 inline-flex items-center gap-2 font-semibold">
+                Read the skill specification <ArrowRight className="size-4" />
+              </Link>
+            </div>
+            <div className="grid overflow-hidden rounded-2xl border border-background/15 sm:grid-cols-2">
+              <pre className="border-b border-background/15 p-6 text-xs leading-7 text-background/75 sm:border-b-0 sm:border-r">{`# agents/skills.yml\nversion: 1\nskills:\n  - id: team/backend-review\n    version: ^2.1.0\n    enabled: true`}</pre>
+              <pre className="p-6 text-xs leading-7 text-background/75">{`$ skillib pull\n✓ resolved 2.3.1\n✓ integrity verified\n✓ installed read-only\n\n$ skillib verify\n✓ 8 checks passed`}</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border">
+        <div className="page-shell py-24 sm:py-32">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="section-label">Skill registry</p>
+              <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
+                Discover workflows worth repeating.
+              </h2>
+              <p className="mt-5 text-lg leading-8 text-muted-foreground">
+                Search public skills from developers and engineering organisations.
+              </p>
+            </div>
+            <div className="w-full max-w-lg"><RegistrySearch /></div>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center gap-2 font-mono text-xs text-muted-foreground">
+            <Search className="size-3.5" /> Popular:
+            {[["nextjs", "Next.js"], ["backend", "Backend"], ["security", "Security"], ["testing", "Testing"]].map(([query, label]) => (
+              <Link key={query} href={`/skills?q=${query}`} className="rounded-full border border-border px-3 py-1.5 hover:border-foreground hover:text-foreground">{label}</Link>
+            ))}
           </div>
           {featured.length > 0 ? (
-            <div className="skill-grid mt-10">
-              {featured.map((skill) => (
-                <SkillCard key={skill.id} skill={skill} />
-              ))}
+            <div className="skill-grid mt-12">
+              {featured.map((skill) => <SkillCard key={skill.id} skill={skill} />)}
             </div>
           ) : (
-            <div className="mt-10 flex flex-col items-center rounded-2xl border border-dashed border-border p-12 text-center">
-              <LogoMark size={54} />
-              <h3 className="mt-5 font-display text-2xl font-bold">
-                The registry is ready for its first skills.
-              </h3>
-              <p className="mt-3 max-w-md text-muted-foreground">
-                Publish a workflow you trust and make it useful beyond one
-                project.
-              </p>
-              <Button asChild className="mt-6">
-                <Link href="/signup">Publish the first skill</Link>
-              </Button>
+            <div className="mt-12 rounded-2xl border border-dashed border-border p-12 text-center">
+              <Sparkles className="mx-auto size-8" />
+              <h3 className="mt-5 font-display text-2xl font-semibold">Publish the first trusted workflow.</h3>
+              <p className="mx-auto mt-3 max-w-md text-muted-foreground">Turn a repeatable project practice into a versioned public or private skill.</p>
+              <Button asChild className="mt-6 rounded-full"><Link href="/signup">Create an account</Link></Button>
             </div>
           )}
         </div>
       </section>
 
-      <section className="border-b border-border bg-muted/45">
-        <div className="page-shell py-20">
-          <div className="max-w-2xl">
-            <span className="section-label">Guides</span>
-            <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Build a better working relationship with coding AI.
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              Practical guidance for protecting project logic, turning expertise
-              into reusable skills, and getting more verified value from every
-              token.
-            </p>
-          </div>
-          <div className="mt-10 grid overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2 md:gap-px">
-            {guides.map(([number, label, title, href]) => (
-              <Link
-                key={number}
-                href={href}
-                className="group flex items-center justify-between gap-6 bg-background p-6 hover:bg-muted/40"
-              >
-                <div>
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {number} · {label}
-                  </span>
-                  <h3 className="mt-2 font-display text-lg font-bold">
-                    {title}
-                  </h3>
+      <section className="border-b border-border bg-muted/35">
+        <div className="page-shell py-24 sm:py-32">
+          <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="section-label">Why teams use Skillib</p>
+              <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">Make every token produce durable progress.</h2>
+            </div>
+            <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
+              {outcomes.map((outcome) => (
+                <div key={outcome} className="bg-background p-7">
+                  <Braces className="size-4 text-muted-foreground" />
+                  <p className="mt-6 leading-7">{outcome}</p>
                 </div>
-                <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-1" />
-              </Link>
-            ))}
-            <Link
-              href="/guides#cli"
-              className="group flex items-center justify-between gap-6 bg-primary p-6 text-primary-foreground md:col-span-2"
-            >
-              <div>
-                <span className="font-mono text-xs text-primary-foreground/50">
-                  05 · CLI quickstart
-                </span>
-                <h3 className="mt-2 font-display text-lg font-bold">
-                  Init, watch, verify, publish.
-                </h3>
-              </div>
-              <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-1" />
-            </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-primary text-primary-foreground">
-        <div className="page-shell py-24 text-center">
-          <span className="font-mono text-xs uppercase tracking-[0.16em] text-primary-foreground/50">
-            Start accountable
-          </span>
-          <h2 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Let AI move fast. Make it show its work.
-          </h2>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button
-              asChild
-              size="lg"
-              className="bg-background text-foreground hover:bg-background/85"
-            >
-              <Link href="/signup">Create an account</Link>
-            </Button>
-            <Button
-              asChild
-              variant="secondary"
-              size="lg"
-              className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
-            >
-              <Link href="/guides">Read product guides</Link>
-            </Button>
+      <section className="border-b border-border">
+        <div className="page-shell py-24 text-center sm:py-32">
+          <LogoMark size={54} />
+          <h2 className="mx-auto mt-8 max-w-3xl font-display text-4xl font-bold tracking-[-0.04em] sm:text-6xl">Let AI move fast. Make it show its work.</h2>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">Start with project-local rules, live watching, deterministic verification, and a skill library that gets better every time.</p>
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg" className="rounded-full px-7"><Link href="/signup">Start with Skillib</Link></Button>
+            <Button asChild variant="secondary" size="lg" className="rounded-full px-7"><Link href="/skills">Explore skills</Link></Button>
           </div>
         </div>
       </section>
