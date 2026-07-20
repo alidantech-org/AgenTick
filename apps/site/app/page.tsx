@@ -51,7 +51,11 @@ const capabilities = [
 ];
 
 const workflow = [
-  ["01", "Specify", "Describe how the repository must be changed and verified."],
+  [
+    "01",
+    "Specify",
+    "Describe how the repository must be changed and verified.",
+  ],
   ["02", "Watch", "Capture file activity and findings while work happens."],
   ["03", "Verify", "Run deterministic checks and preserve their real output."],
   ["04", "Share", "Package reliable workflows as installable skills."],
@@ -77,8 +81,9 @@ export default async function HomePage() {
             <span className="text-muted-foreground">Keep the proof.</span>
           </h1>
           <p className="mt-8 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-            Skillib watches project changes, verifies work against repository-owned
-            rules, and turns proven workflows into reusable, versioned skills.
+            Skillib watches project changes, verifies work against
+            repository-owned rules, and turns proven workflows into reusable,
+            versioned skills.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" className="rounded-full px-7">
@@ -274,7 +279,8 @@ export default async function HomePage() {
                 Discover workflows worth repeating.
               </h2>
               <p className="mt-5 text-lg leading-8 text-muted-foreground">
-                Search public skills from developers and engineering organisations.
+                Search public skills from developers and engineering
+                organisations.
               </p>
             </div>
             <div className="w-full max-w-lg">
