@@ -59,7 +59,7 @@ jobs:
             exit 1
           fi
           export PNPM_HOME="$global_home"
-          export PATH="$PNPM_HOME:$PATH"
+          export PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH"
           pnpm add --global "$tarball" >> /tmp/skillib-package.log 2>&1
           skillib --help >> /tmp/skillib-package.log 2>&1
       - name: Runtime smoke
