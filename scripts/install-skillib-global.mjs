@@ -14,7 +14,9 @@ function quoteWindows(value) {
 function runCommand(command, args, options = {}) {
   if (isWindows) {
     const shell = process.env.ComSpec || "cmd.exe";
-    const expression = [quoteWindows(command), ...args.map(quoteWindows)].join(" ");
+    const expression = [quoteWindows(command), ...args.map(quoteWindows)].join(
+      " ",
+    );
     return execFileSync(shell, ["/d", "/s", "/c", expression], {
       cwd: root,
       env: process.env,
@@ -48,7 +50,9 @@ function parseGlobalBin(output) {
 
   const globalBin = candidates.findLast((line) => isAbsolute(line));
   if (!globalBin) {
-    throw new Error(`Could not determine pnpm global bin directory from:\n${output}`);
+    throw new Error(
+      `Could not determine pnpm global bin directory from:\n${output}`,
+    );
   }
   return globalBin;
 }
