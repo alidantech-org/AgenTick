@@ -25,7 +25,6 @@ jobs:
           from pathlib import Path
           import subprocess
 
-          root = Path('.')
           replacements = [
               ('AGENTICK', 'SKILLIB'),
               ('AgenTick', 'Skillib'),
@@ -36,6 +35,8 @@ jobs:
 
           tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
           for old in sorted(tracked, key=lambda value: value.count('/'), reverse=True):
+              if old.startswith('.github/workflows/'):
+                  continue
               new = old
               for source, target in replacements:
                   new = new.replace(source, target)
@@ -47,6 +48,8 @@ jobs:
 
           tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
           for filename in tracked:
+              if filename.startswith('.github/workflows/'):
+                  continue
               path = Path(filename)
               try:
                   text = path.read_text(encoding='utf-8')
@@ -72,6 +75,8 @@ jobs:
           )
           failures = []
           for filename in subprocess.check_output(['git', 'ls-files'], text=True).splitlines():
+              if filename.startswith('.github/workflows/'):
+                  continue
               path = Path(filename)
               try:
                   lines = path.read_text(encoding='utf-8').splitlines()
@@ -93,6 +98,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
-          git add -A
+          git add -A ':!.github/workflows/**'
           git commit -m 'feat: rename product and CLI to Skillib'
           git push origin HEAD:chatgpt/develop
