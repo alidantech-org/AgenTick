@@ -1,4 +1,4 @@
-# @alidantech/agentick
+# agentick
 
 A project-local watcher, verifier, audit trail, and Agent Skill package manager.
 
@@ -7,8 +7,8 @@ A project-local watcher, verifier, audit trail, and Agent Skill package manager.
 Use `pnpm dlx` when you want an isolated one-off invocation without changing your global tools:
 
 ```bash
-pnpm dlx @alidantech/agentick init
-pnpm dlx @alidantech/agentick verify
+pnpm dlx agentick init
+pnpm dlx agentick verify
 ```
 
 ## Install the `agentick` command globally
@@ -16,7 +16,7 @@ pnpm dlx @alidantech/agentick verify
 After the package is published, install it through pnpm:
 
 ```bash
-pnpm add --global @alidantech/agentick
+pnpm add --global agentick
 agentick --help
 ```
 
@@ -33,7 +33,7 @@ Restart the terminal after `pnpm setup`, then run the global installation comman
 The npm equivalent is:
 
 ```bash
-npm install --global @alidantech/agentick
+npm install --global agentick
 agentick --help
 ```
 
@@ -42,7 +42,7 @@ agentick --help
 From the AgenTick repository, build the CLI and link the local package globally:
 
 ```bash
-pnpm --filter @alidantech/agentick build
+pnpm --filter agentick build
 cd packages/agentick
 pnpm link --global
 agentick --help
