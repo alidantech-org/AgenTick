@@ -1,0 +1,33 @@
+name: Update Skillib runtime lockfile
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: chatgpt/develop
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: corepack enable
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm prettier --write packages/skillib/package.json packages/skillib/tsup.config.ts packages/skillib/src/tool/history.ts scripts/install-skillib-global.mjs
+      - name: Commit lockfile and formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
+          git add pnpm-lock.yaml packages/skillib/package.json packages/skillib/tsup.config.ts packages/skillib/src/tool/history.ts scripts/install-skillib-global.mjs
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'fix(skillib): complete packed runtime dependencies'
+          git push origin HEAD:chatgpt/develop
