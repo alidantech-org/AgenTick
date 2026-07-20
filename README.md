@@ -56,8 +56,16 @@ corepack enable
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm --filter skillib build
-node packages/skillib/dist/cli/index.js init
+pnpm build
 ```
+
+To install the current working tree globally, use the packed distribution instead of linking the workspace package:
+
+```bash
+pnpm skillib:install-global
+skillib --help
+```
+
+The command builds Skillib, creates the npm `.tgz` artifact, and installs that exact artifact globally. The generated tarball is stored under the ignored `.skillib-pack/` directory.
 
 The current registry and account milestone is tracked in issue #3 and PR #2.
