@@ -1,6 +1,6 @@
 import { access, readFile } from "node:fs/promises";
 import { constants } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { execa } from "execa";
 import {
   parseAgentickConfig,
@@ -25,7 +25,10 @@ export async function discoverProject(
       `AgenTick must run inside a Git working tree. Current path: ${cwd}`,
     );
   }
-  const root = result.stdout.trim();
+  // Git Bash may print Windows roots with forward slashes while Node APIs return
+  // native separators. Resolve the Git result once so every caller receives the
+  // canonical path format for the current operating system.
+  const root = resolve(result.stdout.trim());
   const agentsDir = join(root, "agents");
   return { root, agentsDir, configPath: join(agentsDir, "agentick.yml") };
 }
