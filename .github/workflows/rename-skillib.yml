@@ -1,0 +1,98 @@
+name: Rename product to Skillib
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: chatgpt/develop
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: corepack enable
+      - name: Rename product and package
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          root = Path('.')
+          replacements = [
+              ('AGENTICK', 'SKILLIB'),
+              ('AgenTick', 'Skillib'),
+              ('agentick', 'skillib'),
+              ('Agent + tick', 'Skill library'),
+              ('Agent + Tick', 'Skill library'),
+          ]
+
+          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          for old in sorted(tracked, key=lambda value: value.count('/'), reverse=True):
+              new = old
+              for source, target in replacements:
+                  new = new.replace(source, target)
+              if new == old:
+                  continue
+              destination = Path(new)
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              subprocess.run(['git', 'mv', old, new], check=True)
+
+          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          for filename in tracked:
+              path = Path(filename)
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except (UnicodeDecodeError, IsADirectoryError):
+                  continue
+              updated = text
+              for source, target in replacements:
+                  updated = updated.replace(source, target)
+              updated = updated.replace(
+                  'https://github.com/alidantech-org/Skillib',
+                  'https://github.com/alidantech-org/AgenTick',
+              )
+              updated = updated.replace(
+                  'https://api.github.com/repos/alidantech-org/Skillib',
+                  'https://api.github.com/repos/alidantech-org/AgenTick',
+              )
+              if updated != text:
+                  path.write_text(updated, encoding='utf-8')
+
+          allowed = (
+              'github.com/alidantech-org/AgenTick',
+              'api.github.com/repos/alidantech-org/AgenTick',
+          )
+          failures = []
+          for filename in subprocess.check_output(['git', 'ls-files'], text=True).splitlines():
+              path = Path(filename)
+              try:
+                  lines = path.read_text(encoding='utf-8').splitlines()
+              except (UnicodeDecodeError, IsADirectoryError):
+                  continue
+              for number, line in enumerate(lines, 1):
+                  if any(token in line for token in ('agentick', 'AGENTICK', 'AgenTick')) and not any(item in line for item in allowed):
+                      failures.append(f'{filename}:{number}:{line}')
+          if failures:
+              raise SystemExit('Old branding remains:\n' + '\n'.join(failures[:100]))
+          PY
+      - name: Install and update lockfile
+        run: pnpm install --no-frozen-lockfile
+      - run: pnpm format
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Commit rename
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: rename product and CLI to Skillib'
+          git push origin HEAD:chatgpt/develop
