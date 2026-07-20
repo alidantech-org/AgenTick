@@ -39,7 +39,9 @@ function isIgnoredPath(
 
   // Chokidar 4+ no longer expands glob patterns. Probe a synthetic child so
   // directory patterns such as **/node_modules/** can prune the directory.
-  return isDirectory && matchesAny(`${relativePath}/__skillib_probe__`, patterns);
+  return (
+    isDirectory && matchesAny(`${relativePath}/__skillib_probe__`, patterns)
+  );
 }
 
 function waitForWatcherReady(watcher: FSWatcher): Promise<void> {
