@@ -58,7 +58,9 @@ const pathEntries = (process.env.PATH ?? "")
   .filter(Boolean)
   .map((entry) => resolve(entry).toLowerCase());
 
-console.log("\nSkillib was installed and verified from the packed npm artifact.");
+console.log(
+  "\nSkillib was installed and verified from the packed npm artifact.",
+);
 console.log(`Global executable directory: ${globalBin}`);
 
 if (!pathEntries.includes(normalizedBin)) {
