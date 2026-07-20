@@ -1,0 +1,33 @@
+name: Format filesystem watcher fix
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: chatgpt/develop
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prettier --write packages/skillib/src/tool/watch.ts packages/skillib/src/tool/watch.test.ts
+      - name: Commit formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
+          git add packages/skillib/src/tool/watch.ts packages/skillib/src/tool/watch.test.ts
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'style: format filesystem watcher fix'
+          git push origin HEAD:chatgpt/develop
