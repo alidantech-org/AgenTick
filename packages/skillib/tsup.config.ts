@@ -17,7 +17,6 @@ export default defineConfig([
     sourcemap: true,
     clean: true,
     dts: false,
-    banner: { js: "#!/usr/bin/env node" },
     noExternal: bundledWorkspacePackages,
   },
   {
