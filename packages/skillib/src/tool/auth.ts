@@ -8,7 +8,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { registryUrlFromEnv } from "@alidantech/agentick-skill-lib";
+import { registryUrlFromEnv } from "@alidantech/skillib-skill-lib";
 import { HistoryStore } from "./history.js";
 import {
   discoverProject,
@@ -36,7 +36,7 @@ interface MeResponse {
 }
 
 function credentialPath(project: ProjectContext): string {
-  return join(project.agentsDir, ".agentick", "auth.json");
+  return join(project.agentsDir, ".skillib", "auth.json");
 }
 
 async function readCredentials(
@@ -92,7 +92,7 @@ export async function loginToRegistry(input: {
   );
   const token = input.token.trim();
   if (!token.startsWith("agt_"))
-    throw new Error("Expected an AgenTick token beginning with agt_");
+    throw new Error("Expected an Skillib token beginning with agt_");
   const identity = await fetchIdentity(registry, token);
   const path = credentialPath(project);
   await mkdir(dirname(path), { recursive: true });
@@ -116,7 +116,7 @@ export async function loginToRegistry(input: {
   await chmod(path, 0o600).catch(() => undefined);
   const history = new HistoryStore(project);
   await history.record("registry.login", {
-    path: "agents/.agentick/auth.json",
+    path: "agents/.skillib/auth.json",
     payload: { registry: registry.origin, handle: identity.account.handle },
   });
   history.close();
@@ -133,7 +133,7 @@ export async function logoutFromRegistry(
   if (existed) {
     const history = new HistoryStore(project);
     await history.record("registry.logout", {
-      path: "agents/.agentick/auth.json",
+      path: "agents/.skillib/auth.json",
     });
     history.close();
   }
@@ -150,7 +150,7 @@ export async function registryIdentity(
   const token = await resolveRegistryToken(project, registry, env);
   if (!token)
     throw new Error(
-      "Not logged in. Create a token on the site and run `agentick login`.",
+      "Not logged in. Create a token on the site and run `skillib login`.",
     );
   return fetchIdentity(registry, token);
 }
@@ -160,12 +160,12 @@ export async function resolveRegistryToken(
   registry: URL,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<string | null> {
-  if (env.AGENTICK_TOKEN?.trim()) return env.AGENTICK_TOKEN.trim();
+  if (env.SKILLIB_TOKEN?.trim()) return env.SKILLIB_TOKEN.trim();
   const stored = await readCredentials(project);
   if (!stored) return null;
   if (stored.registry !== registry.origin) {
     throw new Error(
-      `Stored credentials belong to ${stored.registry}, but the configured registry is ${registry.origin}. Run \`agentick login\` again.`,
+      `Stored credentials belong to ${stored.registry}, but the configured registry is ${registry.origin}. Run \`skillib login\` again.`,
     );
   }
   return stored.token;

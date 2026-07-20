@@ -1,6 +1,6 @@
 version: 1
 project:
-  name: agentick
+  name: skillib
   root: .
 watch:
   include:
@@ -15,10 +15,10 @@ watch:
     - "**/.next/**"
     - "**/.turbo/**"
     - agents/skillib/**
-    - agents/.agentick/**
+    - agents/.skillib/**
 agents:
   protected:
-    - agents/agentick.yml
+    - agents/skillib.yml
     - agents/AGENTS.md
     - agents/README.md
     - agents/INSTRUCTIONS.md
@@ -43,7 +43,7 @@ runtime:
   host: 127.0.0.1
   port: 4317
 registry:
-  urlEnv: AGENTICK_REGISTRY_URL
+  urlEnv: SKILLIB_REGISTRY_URL
 skilllib:
   directory: agents/skillib
   requireIntegrity: true

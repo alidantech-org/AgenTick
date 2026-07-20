@@ -10,7 +10,7 @@ export const DEFAULT_IGNORES = [
   "**/.next/**",
   "**/.turbo/**",
   "agents/skillib/**",
-  "agents/.agentick/**",
+  "agents/.skillib/**",
 ] as const;
 
 const pathPattern = z.string().min(1);
@@ -22,7 +22,7 @@ const exactSemver = z
     "Expected an exact semantic version",
   );
 
-export const agentickConfigSchema = z.object({
+export const skillibConfigSchema = z.object({
   version: z.literal(1),
   project: z.object({ name: z.string().min(1), root: z.literal(".") }),
   watch: z.object({
@@ -47,7 +47,7 @@ export const agentickConfigSchema = z.object({
     port: z.number().int().min(1).max(65535).default(4317),
   }),
   registry: z.object({
-    urlEnv: z.string().min(1).default("AGENTICK_REGISTRY_URL"),
+    urlEnv: z.string().min(1).default("SKILLIB_REGISTRY_URL"),
   }),
   skilllib: z.object({
     directory: z.literal("agents/skillib").default("agents/skillib"),
@@ -56,7 +56,7 @@ export const agentickConfigSchema = z.object({
   }),
 });
 
-export type AgentickConfig = z.infer<typeof agentickConfigSchema>;
+export type AgentickConfig = z.infer<typeof skillibConfigSchema>;
 
 export const skillDeclarationSchema = z.object({
   version: z.literal(1),
@@ -85,7 +85,7 @@ export const skillLockSchema = z.object({
 export type SkillLock = z.infer<typeof skillLockSchema>;
 
 export function parseAgentickConfig(source: string): AgentickConfig {
-  return agentickConfigSchema.parse(parse(source));
+  return skillibConfigSchema.parse(parse(source));
 }
 
 export function parseSkillDeclaration(source: string): SkillDeclaration {

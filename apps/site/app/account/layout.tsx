@@ -11,7 +11,7 @@ export default async function AccountLayout({
     <main className="page-shell standard-page account-page">
       <header className="account-header">
         <div>
-          <span className="section-label">AgenTick account</span>
+          <span className="section-label">Skillib account</span>
           <h1>{account.displayName ?? account.handle}</h1>
           <p>
             @{account.handle} · {account.email}

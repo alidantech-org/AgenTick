@@ -216,7 +216,7 @@ export function registryUrlFromEnv(
 ): URL {
   const value = env[envName];
   if (!value) {
-    throw new Error(`${envName} must point to the AgenTick registry`);
+    throw new Error(`${envName} must point to the Skillib registry`);
   }
   const url = new URL(value);
   if (!["https:", "http:"].includes(url.protocol)) {

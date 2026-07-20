@@ -78,9 +78,9 @@ export default async function SkillDetailPage({
           </div>
         </div>
         <div className="install-panel">
-          <span>Install with AgenTick</span>
+          <span>Install with Skillib</span>
           <code>
-            agentick skill add {skill.namespace}/{skill.name} --version{" "}
+            skillib skill add {skill.namespace}/{skill.name} --version{" "}
             {skill.latestVersion ?? "latest"}
           </code>
           {latest && (
@@ -107,7 +107,7 @@ export default async function SkillDetailPage({
           <div className="readme-security-note">
             <h3>Integrity and execution</h3>
             <p>
-              AgenTick verifies the locked SHA-512 digest, installs the package
+              Skillib verifies the locked SHA-512 digest, installs the package
               into a generated read-only library, and never executes downloaded
               scripts automatically.
             </p>

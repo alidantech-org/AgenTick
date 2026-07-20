@@ -30,7 +30,7 @@ export default function GuidesPage() {
             <p>
               Place the project&apos;s non-negotiable architecture, boundaries,
               patterns, and active task scope inside <code>agents/</code>.
-              AgenTick observes source changes against that specification and
+              Skillib observes source changes against that specification and
               records findings rather than trusting an agent&apos;s own summary.
             </p>
             <div className="guide-callout">
@@ -76,10 +76,10 @@ export default function GuidesPage() {
             <span>05</span>
             <h2>CLI quickstart</h2>
             <pre className="guide-code">
-              pnpm dlx agentick init{`\n`}agentick watch{`\n`}agentick verify
+              pnpm dlx skillib init{`\n`}skillib watch{`\n`}skillib verify
               {`\n\n`}# authenticate with a token created in /account{`\n`}
-              agentick login{`\n`}agentick pull{`\n`}agentick skill add
-              johnte/backend-review@2.3.1{`\n`}agentick push
+              skillib login{`\n`}skillib pull{`\n`}skillib skill add
+              johnte/backend-review@2.3.1{`\n`}skillib push
               agents/skills/my-skill --id your-handle/my-skill --version 1.0.0
               --visibility private
             </pre>

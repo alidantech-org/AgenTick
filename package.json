@@ -1,5 +1,5 @@
 {
-  "name": "agentick-monorepo",
+  "name": "skillib-monorepo",
   "private": true,
   "packageManager": "pnpm@11.14.0",
   "engines": {

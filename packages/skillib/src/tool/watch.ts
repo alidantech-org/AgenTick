@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join, matchesGlob, relative, resolve } from "node:path";
 import chokidar from "chokidar";
 import Fastify from "fastify";
-import type { AgentickEvent } from "@alidantech/agentick-shared";
+import type { AgentickEvent } from "@alidantech/skillib-shared";
 import { discoverProject, loadProjectConfig } from "./project.js";
 import { HistoryStore } from "./history.js";
 
@@ -121,13 +121,13 @@ export async function watchProject(
   server.get("/", async (_request, reply) =>
     reply.type("text/html").send(`<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>AgenTick</title><style>
+<title>Skillib</title><style>
 body{font-family:ui-sans-serif,system-ui;margin:0;background:#0b1020;color:#e8ecf4}
 main{max-width:1040px;margin:auto;padding:40px}h1{font-size:40px;margin:0}.muted{color:#9ba7bd}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{background:#121a2d;border:1px solid #27314a;border-radius:16px;padding:20px;margin-top:24px}
 li{padding:10px 0;border-bottom:1px solid #27314a;font-family:ui-monospace,monospace;font-size:13px}.critical{color:#ff8e8e}
 @media(max-width:760px){.grid{grid-template-columns:1fr}}
-</style></head><body><main><h1>AgenTick ✅</h1><p class="muted">Watching ${config.project.name}</p>
+</style></head><body><main><h1>Skillib ✅</h1><p class="muted">Watching ${config.project.name}</p>
 <div class="grid"><div class="card"><strong>Live events</strong><ul id="events"></ul></div>
 <div class="card"><strong>Open findings</strong><ul id="findings"></ul></div></div></main>
 <script>

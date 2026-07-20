@@ -1,7 +1,7 @@
 {
-  "name": "@alidantech/agentick-shared",
+  "name": "@alidantech/skillib-shared",
   "version": "0.1.0",
-  "description": "Shared event and finding types for AgenTick.",
+  "description": "Shared event and finding types for Skillib.",
   "type": "module",
   "license": "GPL-3.0-only",
   "exports": {

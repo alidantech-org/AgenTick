@@ -23,7 +23,7 @@ limits before publication or installation.
 Website authentication is passwordless:
 
 1. a user submits an email;
-2. AgenTick emails an eight-digit, ten-minute code;
+2. Skillib emails an eight-digit, ten-minute code;
 3. only a keyed hash of the code is stored;
 4. successful verification creates or loads the account and issues a random
    database-backed session cookie;
@@ -48,9 +48,9 @@ Private skills require either an active member session or a live CLI token with
 ## CLI credentials
 
 Tokens are shown only once by the website and stored server-side only as a keyed
-hash plus a short visible prefix. `agentick login` validates a pasted token and
-stores it in `agents/.agentick/auth.json`, a generated git-ignored file with
-user-only filesystem permissions where supported. `AGENTICK_TOKEN` remains an
+hash plus a short visible prefix. `skillib login` validates a pasted token and
+stores it in `agents/.skillib/auth.json`, a generated git-ignored file with
+user-only filesystem permissions where supported. `SKILLIB_TOKEN` remains an
 explicit CI override.
 
 ## API

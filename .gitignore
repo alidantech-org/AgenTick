@@ -10,11 +10,11 @@ apps/site/data/
 *.db-wal
 *.tsbuildinfo
 
-# >>> AgenTick managed >>>
+# >>> Skillib managed >>>
 /agents/skillib/
-/agents/.agentick/
-# <<< AgenTick managed <<<
+/agents/.skillib/
+# <<< Skillib managed <<<
 
-agentick.db
+skillib.db
 
 .turbo/

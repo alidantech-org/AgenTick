@@ -1,14 +1,14 @@
-import { DEFAULT_IGNORES, toYaml } from "@alidantech/agentick-config";
+import { DEFAULT_IGNORES, toYaml } from "@alidantech/skillib-config";
 
 export function projectTemplates(projectName: string): Record<string, string> {
   return {
-    "agentick.yml": toYaml({
+    "skillib.yml": toYaml({
       version: 1,
       project: { name: projectName, root: "." },
       watch: { include: ["**/*"], ignore: [...DEFAULT_IGNORES] },
       agents: {
         protected: [
-          "agents/agentick.yml",
+          "agents/skillib.yml",
           "agents/AGENTS.md",
           "agents/README.md",
           "agents/INSTRUCTIONS.md",
@@ -25,7 +25,7 @@ export function projectTemplates(projectName: string): Record<string, string> {
       },
       verify: { commands: [] },
       runtime: { host: "127.0.0.1", port: 4317 },
-      registry: { urlEnv: "AGENTICK_REGISTRY_URL" },
+      registry: { urlEnv: "SKILLIB_REGISTRY_URL" },
       skilllib: {
         directory: "agents/skillib",
         requireIntegrity: true,
@@ -50,13 +50,13 @@ Before changing project code, read:
 4. the relevant workflows, patterns, templates, and skills
 5. \`work/TASKS.md\` and \`work/PLAN.md\`
 
-AgenTick may monitor protected files, project changes, verification evidence, and completion claims.
+Skillib may monitor protected files, project changes, verification evidence, and completion claims.
 `,
     "README.md": `# Project AI Guide
 
 Everything in this directory applies only to this repository. AI must read \`INSTRUCTIONS.md\`, project rules, architecture, workflows, and the active work specification before changing code.
 
-AgenTick watches this directory and project source changes. Protected files may not be modified during normal implementation work.
+Skillib watches this directory and project source changes. Protected files may not be modified during normal implementation work.
 `,
     "INSTRUCTIONS.md": `# AI Instructions
 
@@ -64,7 +64,7 @@ AgenTick watches this directory and project source changes. Protected files may 
 2. Do not require or create a root \`AGENTS.md\`.
 3. Treat rules, architecture, patterns, templates, skills, configuration, and lock files as read-only unless a human explicitly authorizes a governance task.
 4. Update only the active work records and source files allowed by the task.
-5. AgenTick may monitor file changes, validation evidence, protected files, and completion claims in real time.
+5. Skillib may monitor file changes, validation evidence, protected files, and completion claims in real time.
 6. Respond to findings by fixing them or recording a precise evidence-backed dispute.
 `,
     "rules/RULES.md": `# Project Rules

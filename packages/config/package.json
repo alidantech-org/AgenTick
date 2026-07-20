@@ -1,7 +1,7 @@
 {
-  "name": "@alidantech/agentick-config",
+  "name": "@alidantech/skillib-config",
   "version": "0.1.0",
-  "description": "YAML schemas and parsers for AgenTick project configuration.",
+  "description": "YAML schemas and parsers for Skillib project configuration.",
   "type": "module",
   "license": "GPL-3.0-only",
   "exports": {

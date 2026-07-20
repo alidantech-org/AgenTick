@@ -67,7 +67,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     <div className="auth-card">
       <span className="kicker">Passwordless account</span>
       <h1>
-        {mode === "signup" ? "Create your AgenTick account" : "Welcome back"}
+        {mode === "signup" ? "Create your Skillib account" : "Welcome back"}
       </h1>
       <p>
         {mode === "signup"
@@ -129,7 +129,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       {notice && <div className="form-notice">{notice}</div>}
       {error && <div className="form-error">{error}</div>}
       <p className="auth-switch">
-        {mode === "signup" ? "Already have an account?" : "New to AgenTick?"}{" "}
+        {mode === "signup" ? "Already have an account?" : "New to Skillib?"}{" "}
         <Link href={mode === "signup" ? "/login" : "/signup"}>
           {mode === "signup" ? "Log in" : "Create one"}
         </Link>

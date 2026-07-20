@@ -24,9 +24,9 @@ export function LogoMark({ size = 38 }: { size?: number }) {
 
 export function Wordmark({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/" className="wordmark" aria-label="AgenTick home">
+    <Link href="/" className="wordmark" aria-label="Skillib home">
       <LogoMark size={compact ? 28 : 34} />
-      <span>AgenTick</span>
+      <span>Skillib</span>
     </Link>
   );
 }

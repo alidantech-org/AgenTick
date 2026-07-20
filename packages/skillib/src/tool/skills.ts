@@ -21,14 +21,14 @@ import {
   parseSkillLock,
   toYaml,
   type SkillLock,
-} from "@alidantech/agentick-config";
+} from "@alidantech/skillib-config";
 import {
   createSkillBundle,
   integrityForBundle,
   registryUrlFromEnv,
   validateSkillBundle,
   type SkillBundle,
-} from "@alidantech/agentick-skill-lib";
+} from "@alidantech/skillib-skill-lib";
 import { HistoryStore } from "./history.js";
 import { discoverProject, loadProjectConfig } from "./project.js";
 import { resolveRegistryToken } from "./auth.js";
@@ -103,7 +103,7 @@ async function installBundle(
 ): Promise<void> {
   const [namespace, name] = bundle.id.split("/");
   if (!namespace || !name) throw new Error(`Invalid skill id: ${bundle.id}`);
-  const tempRoot = join(agentsDir, ".agentick", "tmp", randomUUID());
+  const tempRoot = join(agentsDir, ".skillib", "tmp", randomUUID());
   const tempSkill = join(tempRoot, namespace, name);
   const target = join(agentsDir, "skillib", namespace, name);
   await mkdir(tempSkill, { recursive: true });
@@ -258,7 +258,7 @@ export async function pushSkill(input: {
     const token = await resolveRegistryToken(project, registry, env);
     if (!token) {
       throw new Error(
-        "Publishing requires a registry login. Create a token on the site and run `agentick login`.",
+        "Publishing requires a registry login. Create a token on the site and run `skillib login`.",
       );
     }
     const skillSourceRoot = resolve(project.agentsDir, "skills");

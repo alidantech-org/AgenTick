@@ -4,11 +4,11 @@ import { discoverProject } from "./project.js";
 import { projectTemplates } from "./templates.js";
 import { HistoryStore } from "./history.js";
 
-const IGNORE_START = "# >>> AgenTick managed >>>";
+const IGNORE_START = "# >>> Skillib managed >>>";
 const IGNORE_BLOCK = `${IGNORE_START}
 /agents/skillib/
-/agents/.agentick/
-# <<< AgenTick managed <<<
+/agents/.skillib/
+# <<< Skillib managed <<<
 `;
 
 function isNotFound(error: unknown): boolean {

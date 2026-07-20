@@ -29,8 +29,8 @@ export async function GET(
   return new Response(JSON.stringify(resolved.bundle, null, 2), {
     headers: {
       "content-type": "application/json; charset=utf-8",
-      "content-disposition": `attachment; filename="${namespace}-${name}-${resolved.bundle.version}.agentick.json"`,
-      "x-agentick-integrity": resolved.integrity,
+      "content-disposition": `attachment; filename="${namespace}-${name}-${resolved.bundle.version}.skillib.json"`,
+      "x-skillib-integrity": resolved.integrity,
     },
   });
 }

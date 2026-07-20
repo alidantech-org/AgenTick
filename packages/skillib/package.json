@@ -1,11 +1,11 @@
 {
-  "name": "agentick",
+  "name": "skillib",
   "version": "0.1.0",
   "description": "Watch, verify, and audit AI-assisted project work.",
   "type": "module",
   "license": "GPL-3.0-only",
   "bin": {
-    "agentick": "./dist/cli/index.js"
+    "skillib": "./dist/cli/index.js"
   },
   "files": [
     "dist",
@@ -31,9 +31,9 @@
     "test": "vitest run --exclude **/dist/**"
   },
   "dependencies": {
-    "@alidantech/agentick-config": "workspace:^",
-    "@alidantech/agentick-shared": "workspace:^",
-    "@alidantech/agentick-skill-lib": "workspace:^",
+    "@alidantech/skillib-config": "workspace:^",
+    "@alidantech/skillib-shared": "workspace:^",
+    "@alidantech/skillib-skill-lib": "workspace:^",
     "cac": "7.0.0",
     "chokidar": "5.0.0",
     "execa": "10.0.0",
@@ -46,7 +46,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alidantech-org/AgenTick.git",
-    "directory": "packages/agentick"
+    "directory": "packages/skillib"
   },
   "homepage": "https://github.com/alidantech-org/AgenTick#readme",
   "bugs": {

@@ -66,7 +66,7 @@ export function TokenManager({
           <span className="kicker">CLI access</span>
           <h2>Publishing tokens</h2>
           <p>
-            Create a token, run <code>agentick login</code>, then paste it when
+            Create a token, run <code>skillib login</code>, then paste it when
             prompted.
           </p>
         </div>

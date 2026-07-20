@@ -5,7 +5,7 @@ import { execa } from "execa";
 import {
   parseAgentickConfig,
   type AgentickConfig,
-} from "@alidantech/agentick-config";
+} from "@alidantech/skillib-config";
 
 export interface ProjectContext {
   root: string;
@@ -22,7 +22,7 @@ export async function discoverProject(
   });
   if (result.exitCode !== 0 || !result.stdout.trim()) {
     throw new Error(
-      `AgenTick must run inside a Git working tree. Current path: ${cwd}`,
+      `Skillib must run inside a Git working tree. Current path: ${cwd}`,
     );
   }
   // Git Bash may print Windows roots with forward slashes while Node APIs return
@@ -30,7 +30,7 @@ export async function discoverProject(
   // canonical path format for the current operating system.
   const root = resolve(result.stdout.trim());
   const agentsDir = join(root, "agents");
-  return { root, agentsDir, configPath: join(agentsDir, "agentick.yml") };
+  return { root, agentsDir, configPath: join(agentsDir, "skillib.yml") };
 }
 
 export async function loadProjectConfig(
@@ -40,7 +40,7 @@ export async function loadProjectConfig(
     await access(project.configPath, constants.R_OK);
   } catch {
     throw new Error(
-      `Missing ${project.configPath}. Run \`agentick init\` first.`,
+      `Missing ${project.configPath}. Run \`skillib init\` first.`,
     );
   }
   return parseAgentickConfig(await readFile(project.configPath, "utf8"));

@@ -1,1 +1,1 @@
-export const SESSION_COOKIE = "agentick_session";
+export const SESSION_COOKIE = "skillib_session";

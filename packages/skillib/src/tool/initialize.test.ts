@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { initializeProject } from "./initialize.js";
 
 async function repository(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), "agentick-"));
+  const root = await mkdtemp(join(tmpdir(), "skillib-"));
   await execa("git", ["init", "-b", "main"], { cwd: root });
   return root;
 }
@@ -30,7 +30,7 @@ describe("initializeProject", () => {
     const result = await initializeProject(nested);
 
     expect(result.root).toBe(root);
-    expect(await exists(join(root, "agents", "agentick.yml"))).toBe(true);
+    expect(await exists(join(root, "agents", "skillib.yml"))).toBe(true);
     expect(await exists(join(nested, "agents"))).toBe(false);
   });
 
@@ -45,8 +45,8 @@ describe("initializeProject", () => {
     const ignore = await readFile(join(root, ".gitignore"), "utf8");
     expect(ignore).toContain("custom-cache/");
     expect(ignore).toContain("/agents/skillib/");
-    expect(ignore).toContain("/agents/.agentick/");
-    expect(result.created).toContain("agents/agentick.yml");
+    expect(ignore).toContain("/agents/.skillib/");
+    expect(result.created).toContain("agents/skillib.yml");
     expect(result.created).toContain("agents/AGENTS.md");
     expect(await exists(join(root, "AGENTS.md"))).toBe(false);
   });

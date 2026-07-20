@@ -16,7 +16,7 @@ import {
 } from "../tool/runtime.js";
 import { promptSecret, ui } from "./ui.js";
 
-const cli = cac("agentick");
+const cli = cac("skillib");
 
 function parseSkillSpec(
   spec: string,
@@ -43,7 +43,7 @@ cli
   .command("init", "Initialize a self-contained agents/ directory")
   .action(async () => {
     try {
-      ui.title("AgenTick init");
+      ui.title("Skillib init");
       const result = await initializeProject();
       ui.success(`Initialized ${result.root}`);
       ui.info(
@@ -65,7 +65,7 @@ cli
   .option("--no-commands", "Validate files without running commands")
   .action(async (options: { commands?: boolean }) => {
     try {
-      ui.title("AgenTick verify");
+      ui.title("Skillib verify");
       const result = await verifyProject(
         process.cwd(),
         options.commands !== false,
@@ -87,7 +87,7 @@ cli
   .option("--port <port>", "Local dashboard port")
   .action(async (options: { port?: string }) => {
     try {
-      ui.title("AgenTick watch");
+      ui.title("Skillib watch");
       const runtime = await watchProject(
         process.cwd(),
         options.port ? Number(options.port) : undefined,
@@ -109,7 +109,7 @@ cli
   .command("status", "Show current project and watch history status")
   .action(async () => {
     try {
-      ui.title("AgenTick status");
+      ui.title("Skillib status");
       const status = await inspectProject();
       ui.info(`Project: ${status.project}`);
       ui.info(`Root: ${status.root}`);
@@ -122,9 +122,9 @@ cli
     }
   });
 
-cli.command("history", "Show recent AgenTick events").action(async () => {
+cli.command("history", "Show recent Skillib events").action(async () => {
   try {
-    ui.title("AgenTick history");
+    ui.title("Skillib history");
     const status = await inspectProject();
     if (status.recentEvents.length === 0) {
       ui.info("No recorded events");
@@ -158,7 +158,7 @@ cli
   .command("skills", "List declared and locked project skills")
   .action(async () => {
     try {
-      ui.title("AgenTick skills");
+      ui.title("Skillib skills");
       await printSkills();
     } catch (error) {
       ui.error(error instanceof Error ? error.message : String(error));
@@ -170,7 +170,7 @@ cli
   .command("skill list", "List declared and locked project skills")
   .action(async () => {
     try {
-      ui.title("AgenTick skill list");
+      ui.title("Skillib skill list");
       await printSkills();
     } catch (error) {
       ui.error(error instanceof Error ? error.message : String(error));
@@ -184,7 +184,7 @@ cli
   .option("--no-pull", "Only update agents/skills.yml")
   .action(async (id: string, options: { version?: string; pull?: boolean }) => {
     try {
-      ui.title("AgenTick skill add");
+      ui.title("Skillib skill add");
       const skill = parseSkillSpec(id, options.version);
       const declared = await addSkillDeclaration(skill);
       ui.success(`Declared ${declared.id}@${declared.version}`);
@@ -206,7 +206,7 @@ cli
   )
   .action(async (id: string) => {
     try {
-      ui.title("AgenTick skill remove");
+      ui.title("Skillib skill remove");
       const removed = await removeSkillDeclaration(id.trim().toLowerCase());
       if (removed) ui.success(`Removed ${id}`);
       else ui.info(`${id} is not declared`);
@@ -220,7 +220,7 @@ cli
   .command("pull", "Resolve and install skills declared in agents/skills.yml")
   .action(async () => {
     try {
-      ui.title("AgenTick pull");
+      ui.title("Skillib pull");
       const installed = await pullSkills();
       if (installed.length === 0) {
         ui.info("No enabled skills to install");
@@ -237,10 +237,10 @@ cli
 
 cli
   .command("login", "Save and verify a registry token for this project")
-  .option("--token <token>", "Token created in the AgenTick account dashboard")
+  .option("--token <token>", "Token created in the Skillib account dashboard")
   .action(async (options: { token?: string }) => {
     try {
-      ui.title("AgenTick login");
+      ui.title("Skillib login");
       const token =
         options.token?.trim() || (await promptSecret("Publishing token"));
       if (!token) throw new Error("A token is required");
@@ -248,7 +248,7 @@ cli
       ui.success(`Logged in as @${identity.account.handle}`);
       ui.info(`Scopes: ${identity.scopes.join(", ")}`);
       ui.info(
-        "Credential saved to agents/.agentick/auth.json (git ignored, mode 0600)",
+        "Credential saved to agents/.skillib/auth.json (git ignored, mode 0600)",
       );
     } catch (error) {
       ui.error(error instanceof Error ? error.message : String(error));
@@ -258,7 +258,7 @@ cli
 
 cli.command("logout", "Remove the saved registry token").action(async () => {
   try {
-    ui.title("AgenTick logout");
+    ui.title("Skillib logout");
     const removed = await logoutFromRegistry();
     if (removed) ui.success("Registry credentials removed");
     else ui.info("No saved credentials were found");
@@ -272,7 +272,7 @@ cli
   .command("whoami", "Show the account for the active registry token")
   .action(async () => {
     try {
-      ui.title("AgenTick whoami");
+      ui.title("Skillib whoami");
       const identity = await registryIdentity();
       ui.success(`@${identity.account.handle}`);
       ui.info(identity.account.email);
@@ -296,7 +296,7 @@ cli
       options: { id?: string; version?: string; visibility?: string },
     ) => {
       try {
-        ui.title("AgenTick push");
+        ui.title("Skillib push");
         if (!options.id || !options.version) {
           throw new Error("Both --id and --version are required");
         }

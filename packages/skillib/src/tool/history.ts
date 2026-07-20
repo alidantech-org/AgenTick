@@ -7,7 +7,7 @@ import type {
   AgentickEventType,
   Finding,
   FindingSeverity,
-} from "@alidantech/agentick-shared";
+} from "@alidantech/skillib-shared";
 import type { ProjectContext } from "./project.js";
 
 export class HistoryStore {
@@ -20,9 +20,9 @@ export class HistoryStore {
     private readonly project: ProjectContext,
     readonly sessionId = randomUUID(),
   ) {
-    this.stateDir = join(project.agentsDir, ".agentick");
+    this.stateDir = join(project.agentsDir, ".skillib");
     this.jsonlPath = join(this.stateDir, "events.jsonl");
-    this.sqlitePath = join(this.stateDir, "agentick.db");
+    this.sqlitePath = join(this.stateDir, "skillib.db");
   }
 
   async open(): Promise<void> {

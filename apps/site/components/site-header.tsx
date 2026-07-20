@@ -30,7 +30,7 @@ export async function SiteHeader() {
               href="https://github.com/alidantech-org/AgenTick"
               target="_blank"
               rel="noreferrer"
-              aria-label="AgenTick on GitHub"
+              aria-label="Skillib on GitHub"
             >
               <Github className="size-4" />
             </a>

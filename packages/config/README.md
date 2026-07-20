@@ -1,5 +1,5 @@
-# @alidantech/agentick-config
+# @alidantech/skillib-config
 
-YAML schemas and parsers for project-local AgenTick configuration.
+YAML schemas and parsers for project-local Skillib configuration.
 
-Part of [AgenTick](https://github.com/alidantech-org/AgenTick).
+Part of [Skillib](https://github.com/alidantech-org/AgenTick).

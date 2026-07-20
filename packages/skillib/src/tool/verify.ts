@@ -6,7 +6,7 @@ import {
   parseSkillDeclaration,
   parseSkillLock,
   type AgentickConfig,
-} from "@alidantech/agentick-config";
+} from "@alidantech/skillib-config";
 import { discoverProject, loadProjectConfig } from "./project.js";
 import { HistoryStore } from "./history.js";
 
@@ -50,7 +50,7 @@ export async function verifyProject(
     checks.push({
       name: "config",
       passed: true,
-      message: "agents/agentick.yml is valid",
+      message: "agents/skillib.yml is valid",
     });
   } catch (error) {
     checks.push({
@@ -97,7 +97,7 @@ export async function verifyProject(
         passed: Boolean(locked),
         message: locked
           ? `locked to ${locked.version}`
-          : `enabled skill ${skill.id} is not locked; run agentick pull`,
+          : `enabled skill ${skill.id} is not locked; run skillib pull`,
       });
     }
   } catch (error) {
@@ -112,7 +112,7 @@ export async function verifyProject(
     join(project.root, ".gitignore"),
     "utf8",
   ).catch(() => "");
-  for (const entry of ["/agents/skillib/", "/agents/.agentick/"]) {
+  for (const entry of ["/agents/skillib/", "/agents/.skillib/"]) {
     const ignored = gitignore.includes(entry);
     checks.push({
       name: `gitignore ${entry}`,
@@ -123,7 +123,7 @@ export async function verifyProject(
 
   const trackedGenerated = await execa(
     "git",
-    ["ls-files", "agents/skillib", "agents/.agentick"],
+    ["ls-files", "agents/skillib", "agents/.skillib"],
     { cwd: project.root, reject: false },
   );
   checks.push({

@@ -38,8 +38,8 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="footer-bottom">
-        <span>© {new Date().getFullYear()} AgenTick</span>
-        <span>Agent + tick. Proof over promises.</span>
+        <span>© {new Date().getFullYear()} Skillib</span>
+        <span>Skill library. Proof over promises.</span>
       </div>
     </footer>
   );

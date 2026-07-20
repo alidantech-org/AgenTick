@@ -62,11 +62,11 @@ export function OrganisationManager({
         >
           <label>
             Name
-            <input name="name" required placeholder="AgenTick Labs" />
+            <input name="name" required placeholder="Skillib Labs" />
           </label>
           <label>
             Registry slug
-            <input name="slug" required placeholder="agentick-labs" />
+            <input name="slug" required placeholder="skillib-labs" />
           </label>
           <label>
             Description

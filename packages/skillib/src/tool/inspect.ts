@@ -4,8 +4,8 @@ import { execa } from "execa";
 import {
   parseSkillDeclaration,
   parseSkillLock,
-} from "@alidantech/agentick-config";
-import type { AgentickEvent } from "@alidantech/agentick-shared";
+} from "@alidantech/skillib-config";
+import type { AgentickEvent } from "@alidantech/skillib-shared";
 import { HistoryStore } from "./history.js";
 import { discoverProject, loadProjectConfig } from "./project.js";
 

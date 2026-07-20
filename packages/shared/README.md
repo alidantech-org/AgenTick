@@ -1,5 +1,5 @@
-# @alidantech/agentick-shared
+# @alidantech/skillib-shared
 
-Shared event and finding contracts used by AgenTick packages.
+Shared event and finding contracts used by Skillib packages.
 
-Part of [AgenTick](https://github.com/alidantech-org/AgenTick).
+Part of [Skillib](https://github.com/alidantech-org/AgenTick).

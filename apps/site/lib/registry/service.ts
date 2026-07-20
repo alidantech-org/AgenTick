@@ -6,7 +6,7 @@ import {
   parseSkillMarkdown,
   validateSkillBundle,
   type SkillBundle,
-} from "@alidantech/agentick-skill-lib";
+} from "@alidantech/skillib-skill-lib";
 import { execute, numberValue, stringValue } from "@/lib/db/client";
 import { fingerprint } from "@/lib/auth/crypto";
 import { hasScope, type TokenPrincipal } from "@/lib/auth/dal";

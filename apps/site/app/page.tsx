@@ -97,7 +97,7 @@ export default async function HomePage() {
         <div className="page-shell grid gap-14 py-20 sm:py-28 lg:grid-cols-[1.05fr_.95fr] lg:items-start">
           <div>
             <div className="mb-6 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
-              <LogoMark size={18} /> Agent + tick — proof over promises
+              <LogoMark size={18} /> Skill library — proof over promises
             </div>
             <h1 className="max-w-3xl font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
               Build with AI.
@@ -105,14 +105,14 @@ export default async function HomePage() {
               <span className="text-muted-foreground">Keep control.</span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              AgenTick watches every change, checks the work against your
+              Skillib watches every change, checks the work against your
               project’s own rules, and turns hard-won prompting knowledge into
               reusable, versioned skills.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/signup">
-                  Start with AgenTick <ArrowRight className="size-4" />
+                  Start with Skillib <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild variant="secondary" size="lg">
@@ -143,14 +143,14 @@ export default async function HomePage() {
                 ))}
               </div>
               <span className="font-mono text-xs text-primary-foreground/50">
-                agentick — ~/your-project
+                skillib — ~/your-project
               </span>
             </div>
             <div className="space-y-1 px-5 py-6 font-mono text-[13px] leading-7 text-primary-foreground/75 sm:px-7">
               <p>
                 <span className="text-primary-foreground/40">$</span>{" "}
                 <span className="text-primary-foreground">
-                  pnpm dlx agentick init
+                  pnpm dlx skillib init
                 </span>
               </p>
               <p className="text-primary-foreground">
@@ -159,7 +159,7 @@ export default async function HomePage() {
               <p>&nbsp;</p>
               <p>
                 <span className="text-primary-foreground/40">$</span>{" "}
-                <span className="text-primary-foreground">agentick watch</span>
+                <span className="text-primary-foreground">skillib watch</span>
               </p>
               <p className="pl-4 text-primary-foreground/45">
                 watching 218 files · dashboard :4317
@@ -220,7 +220,7 @@ export default async function HomePage() {
       <section className="border-b border-border">
         <div className="page-shell py-20">
           <div className="max-w-2xl">
-            <span className="section-label">Why AgenTick</span>
+            <span className="section-label">Why Skillib</span>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               AI speed without the cleanup bill.
             </h2>
@@ -263,7 +263,7 @@ export default async function HomePage() {
               Rules, runtime, registry.
             </h2>
             <p className="mt-4 text-muted-foreground">
-              AgenTick connects the project specification, live watcher, and
+              Skillib connects the project specification, live watcher, and
               shared skill ecosystem without putting extra configuration in your
               source root.
             </p>
@@ -314,7 +314,7 @@ export default async function HomePage() {
               johnte/backend-review{`\n`} version: ^2.1.0{`\n`} enabled: true
             </pre>
             <pre className="bg-primary-foreground/5 p-5 text-xs leading-6">
-              $ agentick pull{`\n`}✓ resolved 2.3.1{`\n`}✓ sha512 integrity
+              $ skillib pull{`\n`}✓ resolved 2.3.1{`\n`}✓ sha512 integrity
               verified{`\n`}✓ installed read-only
             </pre>
           </div>

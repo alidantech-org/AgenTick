@@ -25,7 +25,7 @@ export default async function SkillsPage({
   return (
     <main className="page-shell standard-page registry-page">
       <header className="page-hero registry-hero">
-        <span className="section-label">AgenTick skill registry</span>
+        <span className="section-label">Skillib skill registry</span>
         <h1>Reusable expertise for coding with AI.</h1>
         <p>
           Discover public skills, inspect immutable versions, and install

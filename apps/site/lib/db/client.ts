@@ -12,7 +12,7 @@ let schemaReady: Promise<void> | undefined;
 
 export function createDatabaseClient(): Client {
   if (client) return client;
-  const url = process.env.DATABASE_URL ?? "file:agentick.db";
+  const url = process.env.DATABASE_URL ?? "file:skillib.db";
   const authToken = process.env.DATABASE_AUTH_TOKEN;
   client = createClient({ url, ...(authToken ? { authToken } : {}) });
   return client;
