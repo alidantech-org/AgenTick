@@ -8,8 +8,8 @@ export function SiteFooter() {
         <div>
           <Wordmark />
           <p className="footer-copy">
-            Watch AI-assisted work, verify the evidence, and share skills
-            without losing control of your codebase.
+            Watch AI-assisted work, verify the evidence, and share skills without
+            losing control of your codebase.
           </p>
         </div>
         <div>
@@ -39,7 +39,7 @@ export function SiteFooter() {
       </div>
       <div className="footer-bottom">
         <span>© {new Date().getFullYear()} AgenTick</span>
-        <span>Agent + tick ✓</span>
+        <span>Agent + tick. Proof over promises.</span>
       </div>
     </footer>
   );
