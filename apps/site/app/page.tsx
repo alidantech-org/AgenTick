@@ -57,8 +57,7 @@ export default async function HomePage() {
             </div>
             <div className="terminal-body">
               <p>
-                <span className="prompt">$</span> pnpm dlx @alidantech/agentick
-                init
+                <span className="prompt">$</span> pnpm dlx agentick init
               </p>
               <p className="terminal-success">
                 ✓ agents/ initialized without touching your source
