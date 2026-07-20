@@ -28,7 +28,7 @@ export default defineConfig([
     splitting: false,
     sourcemap: true,
     clean: false,
-    dts: true,
+    dts: false,
     noExternal: bundledWorkspacePackages,
   },
 ]);
