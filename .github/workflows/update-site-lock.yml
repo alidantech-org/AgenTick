@@ -19,7 +19,8 @@ jobs:
         with:
           node-version: "24"
       - run: corepack enable
-      - run: pnpm install --no-frozen-lockfile
+      - name: Update dependencies
+        run: pnpm install --no-frozen-lockfile > /tmp/agentick-site-install.log 2>&1
       - name: Commit lockfile
         run: |
           git config user.name 'github-actions[bot]'
@@ -30,3 +31,10 @@ jobs:
           fi
           git commit -m 'chore: update lockfile for themed site'
           git push origin HEAD:chatgpt/develop
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-lock-diagnostics
+          path: /tmp/agentick-site-install.log
+          if-no-files-found: error
