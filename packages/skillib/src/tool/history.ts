@@ -11,7 +11,9 @@ import type {
 } from "@alidantech/skillib-shared";
 import type { ProjectContext } from "./project.js";
 
-const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite") as typeof import("node:sqlite");
+const { DatabaseSync } = createRequire(import.meta.url)(
+  "node:sqlite",
+) as typeof import("node:sqlite");
 
 export class HistoryStore {
   readonly stateDir: string;
