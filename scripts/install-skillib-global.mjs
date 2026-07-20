@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { readdirSync, rmSync, mkdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { mkdirSync, readdirSync, rmSync } from "node:fs";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -13,6 +13,14 @@ function run(args) {
     stdio: "inherit",
     env: process.env,
   });
+}
+
+function capture(args) {
+  return execFileSync(pnpm, args, {
+    cwd: root,
+    encoding: "utf8",
+    env: process.env,
+  }).trim();
 }
 
 rmSync(packDirectory, { recursive: true, force: true });
@@ -32,5 +40,29 @@ if (!tarball) {
 
 run(["add", "--global", join(packDirectory, tarball)]);
 
-console.log("\nSkillib was installed globally from the packed npm artifact.");
-console.log("Run: skillib --help");
+const globalBin = capture(["bin", "--global"]);
+const executable = join(
+  globalBin,
+  process.platform === "win32" ? "skillib.cmd" : "skillib",
+);
+
+execFileSync(executable, ["--help"], {
+  cwd: root,
+  stdio: "inherit",
+  env: process.env,
+});
+
+const normalizedBin = resolve(globalBin).toLowerCase();
+const pathEntries = (process.env.PATH ?? "")
+  .split(delimiter)
+  .filter(Boolean)
+  .map((entry) => resolve(entry).toLowerCase());
+
+console.log("\nSkillib was installed and verified from the packed npm artifact.");
+console.log(`Global executable directory: ${globalBin}`);
+
+if (!pathEntries.includes(normalizedBin)) {
+  console.log("Add that directory to PATH, then reopen your terminal.");
+} else {
+  console.log("Run: skillib --help");
+}
