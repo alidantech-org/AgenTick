@@ -54,6 +54,7 @@ jobs:
           pnpm --filter skillib pack --pack-destination "$pack_dir" > /tmp/skillib-package.log 2>&1
           tarball="$(find "$pack_dir" -maxdepth 1 -name 'skillib-*.tgz' -print -quit)"
           test -n "$tarball"
+          tar -xOf "$tarball" package/dist/cli/index.js | grep -nE 'from "(node:)?sqlite"|import\("(node:)?sqlite"\)' >> /tmp/skillib-package.log || true
           if tar -xOf "$tarball" package/package.json | grep -q 'workspace:'; then
             echo "Packed Skillib artifact contains workspace protocol dependencies" >> /tmp/skillib-package.log
             exit 1
@@ -93,5 +94,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-diagnostics
-          path: /tmp/skillib-*.log
+          path: |
+            /tmp/skillib-*.log
+            /tmp/skillib-pack/*.tgz
           if-no-files-found: ignore
