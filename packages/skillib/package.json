@@ -26,14 +26,12 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --exclude **/dist/**"
+    "test": "vitest run --exclude **/dist/**",
+    "pack:check": "pnpm pack --pack-destination ../../.skillib-pack"
   },
   "dependencies": {
-    "@alidantech/skillib-config": "workspace:^",
-    "@alidantech/skillib-shared": "workspace:^",
-    "@alidantech/skillib-skill-lib": "workspace:^",
     "cac": "7.0.0",
     "chokidar": "5.0.0",
     "execa": "10.0.0",
@@ -41,6 +39,10 @@
     "picocolors": "1.1.1"
   },
   "devDependencies": {
+    "@alidantech/skillib-config": "workspace:^",
+    "@alidantech/skillib-shared": "workspace:^",
+    "@alidantech/skillib-skill-lib": "workspace:^",
+    "tsup": "8.5.0",
     "vitest": "4.1.10"
   },
   "repository": {
