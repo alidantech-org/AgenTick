@@ -15,7 +15,7 @@ const shared = {
   sourcemap: true,
   dts: false,
   noExternal: bundledWorkspacePackages,
-  external: ["node:sqlite"],
+  external: ["node:sqlite", "yaml", "zod"],
   esbuildOptions(options: { supported?: Record<string, boolean> }) {
     options.supported = {
       ...options.supported,
