@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join, matchesGlob, relative, resolve } from "node:path";
-import chokidar from "chokidar";
+import chokidar, { type FSWatcher } from "chokidar";
 import Fastify from "fastify";
 import type { AgentickEvent } from "@alidantech/skillib-shared";
 import { discoverProject, loadProjectConfig } from "./project.js";
@@ -21,6 +21,32 @@ function matchesAny(path: string, patterns: readonly string[]): boolean {
   return patterns.some((pattern) =>
     matchesGlob(normalized, normalizePath(pattern)),
   );
+}
+
+function relativeProjectPath(root: string, watchedPath: string): string {
+  return normalizePath(relative(root, resolve(root, watchedPath)));
+}
+
+function isIgnoredPath(
+  root: string,
+  watchedPath: string,
+  patterns: readonly string[],
+  isDirectory: boolean,
+): boolean {
+  const relativePath = relativeProjectPath(root, watchedPath);
+  if (!relativePath) return false;
+  if (matchesAny(relativePath, patterns)) return true;
+
+  // Chokidar 4+ no longer expands glob patterns. Probe a synthetic child so
+  // directory patterns such as **/node_modules/** can prune the directory.
+  return isDirectory && matchesAny(`${relativePath}/__skillib_probe__`, patterns);
+}
+
+function waitForWatcherReady(watcher: FSWatcher): Promise<void> {
+  return new Promise((resolveReady, rejectReady) => {
+    watcher.once("ready", resolveReady);
+    watcher.once("error", rejectReady);
+  });
 }
 
 function bytesIntegrity(content: Uint8Array): string {
@@ -45,9 +71,15 @@ export async function watchProject(
     type: "file.added" | "file.changed" | "file.removed",
     watchedPath: string,
   ): Promise<void> => {
-    const relativePath = normalizePath(
-      relative(project.root, resolve(project.root, watchedPath)),
-    );
+    const relativePath = relativeProjectPath(project.root, watchedPath);
+
+    if (
+      !matchesAny(relativePath, config.watch.include) ||
+      matchesAny(relativePath, config.watch.ignore)
+    ) {
+      return;
+    }
+
     const event = await history.record(type, { path: relativePath });
     publish(event);
 
@@ -85,15 +117,28 @@ export async function watchProject(
     }
   };
 
-  const watcher = chokidar.watch(config.watch.include, {
+  // Chokidar 4 and 5 intentionally do not expand glob watch paths. Watch the
+  // repository root and apply Skillib's include/ignore patterns ourselves.
+  const watcher = chokidar.watch(".", {
     cwd: project.root,
-    ignored: config.watch.ignore,
+    ignored: (watchedPath, stats) =>
+      isIgnoredPath(
+        project.root,
+        watchedPath,
+        config.watch.ignore,
+        stats?.isDirectory() ?? false,
+      ),
     ignoreInitial: true,
     persistent: true,
+    awaitWriteFinish: {
+      stabilityThreshold: 100,
+      pollInterval: 25,
+    },
   });
   watcher.on("add", (path) => void recordFileEvent("file.added", path));
   watcher.on("change", (path) => void recordFileEvent("file.changed", path));
   watcher.on("unlink", (path) => void recordFileEvent("file.removed", path));
+  await waitForWatcherReady(watcher);
 
   const server = Fastify({ logger: false });
   server.get("/health", async () => ({
