@@ -19,13 +19,7 @@ rmSync(packDirectory, { recursive: true, force: true });
 mkdirSync(packDirectory, { recursive: true });
 
 run(["--filter", "skillib", "build"]);
-run([
-  "--filter",
-  "skillib",
-  "pack",
-  "--pack-destination",
-  packDirectory,
-]);
+run(["--filter", "skillib", "pack", "--pack-destination", packDirectory]);
 
 const tarballs = readdirSync(packDirectory)
   .filter((name) => /^skillib-.*\.tgz$/.test(name))
