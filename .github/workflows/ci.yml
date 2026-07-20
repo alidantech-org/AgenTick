@@ -43,6 +43,25 @@ jobs:
         shell: bash
         run: |
           pnpm build > /tmp/skillib-build.log 2>&1
+      - name: Packed CLI smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          pack_dir=/tmp/skillib-pack
+          global_home=/tmp/skillib-global
+          rm -rf "$pack_dir" "$global_home"
+          mkdir -p "$pack_dir" "$global_home"
+          pnpm --filter skillib pack --pack-destination "$pack_dir" > /tmp/skillib-package.log 2>&1
+          tarball="$(find "$pack_dir" -maxdepth 1 -name 'skillib-*.tgz' -print -quit)"
+          test -n "$tarball"
+          if tar -xOf "$tarball" package/package.json | grep -q 'workspace:'; then
+            echo "Packed Skillib artifact contains workspace protocol dependencies" >> /tmp/skillib-package.log
+            exit 1
+          fi
+          export PNPM_HOME="$global_home"
+          export PATH="$PNPM_HOME:$PATH"
+          pnpm add --global "$tarball" >> /tmp/skillib-package.log 2>&1
+          skillib --help >> /tmp/skillib-package.log 2>&1
       - name: Runtime smoke
         shell: bash
         env:
