@@ -20,7 +20,12 @@ export async function SiteHeader() {
           <RegistrySearch compact />
         </div>
         <div className="header-actions">
-          <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="hidden sm:inline-flex"
+          >
             <a
               href="https://github.com/alidantech-org/AgenTick"
               target="_blank"
@@ -30,7 +35,12 @@ export async function SiteHeader() {
               <Github className="size-4" />
             </a>
           </Button>
-          <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            className="hidden sm:inline-flex"
+          >
             <Link href="/guides#cli" aria-label="CLI quickstart">
               <TerminalSquare className="size-4" />
             </Link>
@@ -42,7 +52,12 @@ export async function SiteHeader() {
             </Button>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex"
+              >
                 <Link href="/login">Log in</Link>
               </Button>
               <Button asChild size="sm">

@@ -12,7 +12,9 @@ export function ThemeToggle() {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return <div className="h-5 w-9 rounded-full border border-border bg-muted" />;
+    return (
+      <div className="h-5 w-9 rounded-full border border-border bg-muted" />
+    );
   }
 
   const dark = resolvedTheme === "dark";

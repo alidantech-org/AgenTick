@@ -8,8 +8,8 @@ export function SiteFooter() {
         <div>
           <Wordmark />
           <p className="footer-copy">
-            Watch AI-assisted work, verify the evidence, and share skills without
-            losing control of your codebase.
+            Watch AI-assisted work, verify the evidence, and share skills
+            without losing control of your codebase.
           </p>
         </div>
         <div>
