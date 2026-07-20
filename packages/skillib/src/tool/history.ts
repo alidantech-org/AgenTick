@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { join } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync as DatabaseSyncType } from "node:sqlite";
 import type {
   AgentickEvent,
   AgentickEventType,
@@ -10,11 +11,13 @@ import type {
 } from "@alidantech/skillib-shared";
 import type { ProjectContext } from "./project.js";
 
+const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite") as typeof import("node:sqlite");
+
 export class HistoryStore {
   readonly stateDir: string;
   readonly jsonlPath: string;
   readonly sqlitePath: string;
-  private database: DatabaseSync | undefined;
+  private database: DatabaseSyncType | undefined;
 
   constructor(
     private readonly project: ProjectContext,
