@@ -16,5 +16,6 @@ apps/site/data/
 # <<< Skillib managed <<<
 
 skillib.db
+.skillib-pack/
 
 .turbo/
