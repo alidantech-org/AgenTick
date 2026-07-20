@@ -1,5 +1,5 @@
 {
-  "name": "@alidantech/agentick",
+  "name": "agentick",
   "version": "0.1.0",
   "description": "Watch, verify, and audit AI-assisted project work.",
   "type": "module",
