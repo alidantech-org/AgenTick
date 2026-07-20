@@ -4,7 +4,7 @@ A project-local watcher, verifier, audit trail, and Agent Skill package manager.
 
 ## Run without installing globally
 
-Use `pnpm dlx` when you want an isolated one-off invocation without changing your global tools:
+After the package is published, use `pnpm dlx` for isolated one-off commands:
 
 ```bash
 pnpm dlx skillib init
@@ -13,14 +13,14 @@ pnpm dlx skillib verify
 
 ## Install the `skillib` command globally
 
-After the package is published, install it through pnpm:
+After publication, install it through pnpm:
 
 ```bash
 pnpm add --global skillib
 skillib --help
 ```
 
-`pnpm add --global` installs the package once and exposes the `skillib` executable declared by the package's `bin` field on your shell `PATH`.
+`pnpm add --global` installs the package once and exposes the `skillib` executable declared by the package's `bin` field.
 
 On a new machine, pnpm may first ask you to configure its global binary directory:
 
@@ -28,7 +28,7 @@ On a new machine, pnpm may first ask you to configure its global binary director
 pnpm setup
 ```
 
-Restart the terminal after `pnpm setup`, then run the global installation command again. On Windows, this adds `PNPM_HOME` to the user environment and places the global pnpm command directory on `PATH`.
+Restart the terminal after `pnpm setup`, then run the global installation command again. Confirm that the directory printed by `pnpm bin --global` is on your shell `PATH`.
 
 The npm equivalent is:
 
@@ -37,25 +37,25 @@ npm install --global skillib
 skillib --help
 ```
 
-## Link the command globally while developing Skillib
+## Install the current working tree globally
 
-From the Skillib repository, build the CLI and link the local package globally:
+Do not use `pnpm link --global .` from `packages/skillib`. A linked package is resolved as a standalone workspace and cannot resolve the monorepo's private `workspace:^` development packages.
+
+From the repository root, run:
 
 ```bash
-pnpm --filter skillib build
-cd packages/skillib
-pnpm link --global
+pnpm skillib:install-global
 skillib --help
 ```
 
-This makes the global `skillib` command point to the package in your working tree. Rebuild after changing TypeScript source so `dist/` contains the latest CLI code.
+This command:
 
-Remove the development link with:
+1. builds the bundled Skillib CLI;
+2. creates the same `.tgz` package that npm receives;
+3. installs that tarball globally with pnpm;
+4. leaves the generated tarball in the ignored `.skillib-pack/` directory.
 
-```bash
-cd packages/skillib
-pnpm unlink --global
-```
+Run `pnpm skillib:install-global` again after changing CLI source. This tests the real publishable artifact instead of relying on workspace links.
 
 ## Typical project workflow
 
@@ -79,7 +79,4 @@ skillib push agents/skills/my-skill \
   --visibility private
 ```
 
-A successful login stores the token at `agents/.skillib/auth.json`. The file is
-created with user-only permissions where supported and is covered by Skillib's
-managed `.gitignore` block. The token is never written to YAML, lockfiles, JSONL
-history, command output, or published bundles.
+A successful login stores the token at `agents/.skillib/auth.json`. The file is created with user-only permissions where supported and is covered by Skillib's managed `.gitignore` block. The token is never written to YAML, lockfiles, JSONL history, command output, or published bundles.
