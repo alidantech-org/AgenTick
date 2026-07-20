@@ -20,7 +20,7 @@ project-local `agents/` specification, and preserves auditable history.
 
 ## Workspace
 
-- `packages/agentick` — published CLI and local watcher runtime.
+- `packages/agentick` — published `agentick` CLI and local watcher runtime.
 - `packages/config` — YAML schemas and defaults.
 - `packages/skill-lib` — skill format, bundle validation, integrity, and registry primitives.
 - `packages/shared` — shared events and finding types.
@@ -56,7 +56,7 @@ corepack enable
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm --filter @alidantech/agentick build
+pnpm --filter agentick build
 node packages/agentick/dist/cli/index.js init
 ```
 
