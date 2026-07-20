@@ -5,29 +5,30 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const packDirectory = join(root, ".skillib-pack");
-const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const isWindows = process.platform === "win32";
 
-function run(args) {
-  execFileSync(pnpm, args, {
+function runCommand(command, args, options = {}) {
+  return execFileSync(command, args, {
     cwd: root,
-    stdio: "inherit",
     env: process.env,
+    shell: isWindows,
+    ...options,
   });
 }
 
-function capture(args) {
-  return execFileSync(pnpm, args, {
-    cwd: root,
-    encoding: "utf8",
-    env: process.env,
-  }).trim();
+function runPnpm(args) {
+  runCommand("pnpm", args, { stdio: "inherit" });
+}
+
+function capturePnpm(args) {
+  return runCommand("pnpm", args, { encoding: "utf8" }).trim();
 }
 
 rmSync(packDirectory, { recursive: true, force: true });
 mkdirSync(packDirectory, { recursive: true });
 
-run(["--filter", "skillib", "build"]);
-run(["--filter", "skillib", "pack", "--pack-destination", packDirectory]);
+runPnpm(["--filter", "skillib", "build"]);
+runPnpm(["--filter", "skillib", "pack", "--pack-destination", packDirectory]);
 
 const tarballs = readdirSync(packDirectory)
   .filter((name) => /^skillib-.*\.tgz$/.test(name))
@@ -38,19 +39,12 @@ if (!tarball) {
   throw new Error(`No Skillib tarball was created in ${packDirectory}`);
 }
 
-run(["add", "--global", join(packDirectory, tarball)]);
+runPnpm(["add", "--global", join(packDirectory, tarball)]);
 
-const globalBin = capture(["bin", "--global"]);
-const executable = join(
-  globalBin,
-  process.platform === "win32" ? "skillib.cmd" : "skillib",
-);
+const globalBin = capturePnpm(["bin", "--global"]);
+const executable = join(globalBin, isWindows ? "skillib.cmd" : "skillib");
 
-execFileSync(executable, ["--help"], {
-  cwd: root,
-  stdio: "inherit",
-  env: process.env,
-});
+runCommand(executable, ["--help"], { stdio: "inherit" });
 
 const normalizedBin = resolve(globalBin).toLowerCase();
 const pathEntries = (process.env.PATH ?? "")
