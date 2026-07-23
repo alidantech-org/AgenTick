@@ -30,18 +30,40 @@ Plan: `agents/work/REGISTRY_UPGRADE_PLAN.md`
 - [ ] Add catalog query services and APIs.
 - [ ] Add reusable catalog UI selectors.
 
-## Site features
+## Site design system
 
 - [ ] Establish one modern npm-inspired application shell and semantic design system across public, account, organization, and admin routes.
+- [x] Add global skip navigation, visible focus treatment, reduced-motion behavior, touch targets, theme color-scheme support, and typography wrapping rules.
+- [x] Add reusable accessible form field and form section primitives.
+- [ ] Audit every interactive control against the latest Vercel Web Interface Guidelines.
+- [ ] Standardize loading, success, inline error, empty, not-found, and destructive confirmation patterns.
+
+## Page-by-page redesign
+
+- [ ] Validate and complete `/login` and `/signup` passwordless forms.
+- [ ] Upgrade `/join` invitation acceptance flow.
+- [ ] Upgrade `/guides` documentation experience.
+- [ ] Upgrade `/skills` discovery with complete URL-backed filters and pagination.
+- [ ] Upgrade `/skills/[namespace]/[name]` package overview.
+- [ ] Add and polish package release detail pages.
+- [ ] Upgrade `/account` overview.
+- [ ] Upgrade `/account/profile` with editable identity, verified emails, country, timezone, locale, and lifecycle controls.
+- [x] Upgrade `/account/security` with current-device detection, individual revocation, and revoke-all-other-sessions.
+- [ ] Upgrade `/account/tokens` with granular scopes, resource restrictions, expiry, last-used details, and revocation.
+- [ ] Upgrade `/account/skills` personal package dashboard and management UI.
+- [ ] Upgrade `/account/organisations` organization directory and creation flow.
+- [ ] Upgrade `/account/organisation/[slug]/skills` organization packages, teams, and access grants.
+- [ ] Add and polish admin, catalog management, moderation, events, and audit pages.
+
+## Site feature completeness
+
 - [ ] Upgrade personal package dashboard and package management UI.
 - [ ] Upgrade organization registry dashboard, teams, and access grants.
 - [ ] Upgrade public registry discovery with search, keyword facets, tags, categories, AI models, agent clients, languages, frameworks, runtimes, package managers, licenses, sort, and pagination.
 - [ ] Upgrade public package pages with releases, tags, provenance, compatibility, files, integrity, analytics, publisher details, and install commands.
 - [ ] Upgrade user profile with editable identity, verified emails, country, timezone, locale, and account lifecycle controls.
-- [x] Add active-session management with current-device detection, individual revocation, and revoke-all-other-sessions.
 - [ ] Upgrade API token management with granular scopes, resource restrictions, expiry, last-used details, and revocation.
 - [ ] Add route-level loading, empty, not-found, and error states for all data-backed application routes.
-- [ ] Add admin, catalog management, moderation, events, and audit pages.
 
 ## Reliability and security
 
