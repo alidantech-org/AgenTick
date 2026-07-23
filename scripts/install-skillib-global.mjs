@@ -59,14 +59,10 @@ function parseGlobalBin(output) {
 }
 
 function verifyInstalledCli(executable) {
-  if (!isWindows) {
-    runExecutable(executable, ["--help"], { stdio: "inherit" });
-    return;
-  }
-
-  const shell = process.env.ComSpec || "cmd.exe";
-  const command = `call "${executable.replaceAll('"', '""')}" --help`;
-  runExecutable(shell, ["/d", "/c", command], { stdio: "inherit" });
+  runExecutable(executable, ["--help"], {
+    stdio: "inherit",
+    shell: isWindows,
+  });
 }
 
 rmSync(packDirectory, { recursive: true, force: true });
