@@ -1,0 +1,13 @@
+[package]
+name = "skillib-diagnostics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+skillib-source = { path = "../skillib-source" }
+
+[lints]
+workspace = true
