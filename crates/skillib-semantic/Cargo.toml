@@ -1,0 +1,15 @@
+[package]
+name = "skillib-semantic"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+skillib-ast = { path = "../skillib-ast" }
+skillib-diagnostics = { path = "../skillib-diagnostics" }
+skillib-source = { path = "../skillib-source" }
+
+[lints]
+workspace = true
