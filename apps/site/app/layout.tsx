@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const interTight = Inter_Tight({
   subsets: ["latin"],
