@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { AuthContextPanel } from "@/components/auth-context-panel";
 import { AuthForm } from "@/components/auth-form";
 
-export const metadata: Metadata = { title: "Log in" };
+export const metadata: Metadata = {
+  title: "Log In",
+  description: "Access your Skillib publisher workspace with a secure one-time code.",
+};
+
 export default function LoginPage() {
   return (
-    <main className="auth-page">
-      <div className="auth-aside">
-        <span>Accountable AI coding</span>
-        <h2>Return to your skills, organisations, and publishing tokens.</h2>
-        <p>One email. One short-lived code. No password.</p>
+    <main className="auth-page" id="main-content">
+      <AuthContextPanel mode="login" />
+      <div className="auth-form-column">
+        <Suspense fallback={<div className="auth-card auth-card-skeleton">Loading…</div>}>
+          <AuthForm mode="login" />
+        </Suspense>
       </div>
-      <Suspense>
-        <AuthForm mode="login" />
-      </Suspense>
     </main>
   );
 }
