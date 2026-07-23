@@ -1,7 +1,7 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
-import type SMTPTransport from "nodemailer/lib/smtp-transport";
+import type SMTPPool from "nodemailer/lib/smtp-pool";
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -29,11 +29,11 @@ function mailTransport(): nodemailer.Transporter {
   }
 
   const useAuth = process.env.SMTP_AUTH !== "false";
-  const options: SMTPTransport.Options = {
+  const options: SMTPPool.Options = {
     host: required("SMTP_HOST"),
     port,
     secure: process.env.SMTP_SECURE === "true",
-    pool: process.env.SMTP_POOL !== "false",
+    pool: true,
     maxConnections: Number(process.env.SMTP_MAX_CONNECTIONS ?? 5),
     maxMessages: Number(process.env.SMTP_MAX_MESSAGES ?? 100),
     connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS ?? 10_000),
