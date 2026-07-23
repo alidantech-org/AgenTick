@@ -1,10 +1,14 @@
 import "server-only";
-import { randomInt, randomUUID } from "node:crypto";
+
+import { randomInt } from "node:crypto";
+import { and, count, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { headers } from "next/headers";
-import { execute, executeBatch } from "@/lib/db/client";
+import { database, type SkillibDatabase } from "@/lib/db/client";
+import { accounts, loginOtps, registryNamespaces } from "@/lib/db/schema";
+import { dispatchPendingEvents } from "@/lib/events/dispatcher";
+import { publishEvent } from "@/lib/events/bus";
 import { isEmail, normalizeEmail, normalizeSlug } from "@/lib/format";
 import { fingerprint, hashOtp, safeEqual } from "./crypto";
-import { sendLoginOtp } from "./mail";
 import { createSession } from "./session";
 
 function displayNameFromEmail(email: string): string {
@@ -17,74 +21,96 @@ function displayNameFromEmail(email: string): string {
     .slice(0, 80);
 }
 
-async function uniqueHandle(email: string): Promise<string> {
+type Transaction = Parameters<
+  Parameters<SkillibDatabase["transaction"]>[0]
+>[0];
+
+async function uniqueHandle(email: string, tx: Transaction): Promise<string> {
   const local =
     normalizeSlug(email.split("@")[0] ?? "developer") || "developer";
+
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const candidate =
       attempt === 0 ? local : `${local}-${randomInt(1000, 9999)}`;
-    const existing = await execute(
-      "SELECT 1 FROM registry_namespaces WHERE slug = ? LIMIT 1",
-      [candidate],
-    );
-    if (!existing.rows[0]) return candidate;
+    const existing = await tx
+      .select({ slug: registryNamespaces.slug })
+      .from(registryNamespaces)
+      .where(eq(registryNamespaces.slug, candidate))
+      .limit(1);
+    if (!existing[0]) return candidate;
   }
-  return `${local}-${randomUUID().slice(0, 8)}`;
+
+  return `${local}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
-export async function requestLoginOtp(
-  rawEmail: string,
-): Promise<{ debugOtp?: string }> {
+export async function requestLoginOtp(rawEmail: string): Promise<void> {
   const email = normalizeEmail(rawEmail);
   if (!isEmail(email)) throw new Error("Enter a valid email address");
 
-  const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  const since = new Date(Date.now() - 15 * 60 * 1000);
   const requestHeaders = await headers();
   const requestFingerprint = fingerprint([
     requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim(),
     requestHeaders.get("user-agent"),
   ]);
-  const recent = await execute(
-    `SELECT
-       SUM(CASE WHEN email = ? THEN 1 ELSE 0 END) AS email_count,
-       SUM(CASE WHEN request_fingerprint = ? THEN 1 ELSE 0 END) AS requester_count
-       FROM login_otps
-      WHERE created_at > ?`,
-    [email, requestFingerprint, since],
-  );
-  if (Number(recent.rows[0]?.email_count ?? 0) >= 5) {
+
+  const [emailRequests, requesterRequests] = await Promise.all([
+    database()
+      .select({ value: count() })
+      .from(loginOtps)
+      .where(and(eq(loginOtps.email, email), gt(loginOtps.createdAt, since))),
+    database()
+      .select({ value: count() })
+      .from(loginOtps)
+      .where(
+        and(
+          eq(loginOtps.requestFingerprint, requestFingerprint),
+          gt(loginOtps.createdAt, since),
+        ),
+      ),
+  ]);
+
+  if ((emailRequests[0]?.value ?? 0) >= 5) {
     throw new Error("Too many sign-in requests. Try again in a few minutes.");
   }
-  if (Number(recent.rows[0]?.requester_count ?? 0) >= 20) {
+  if ((requesterRequests[0]?.value ?? 0) >= 20) {
     throw new Error(
       "Too many sign-in requests from this device. Try again later.",
     );
   }
 
   const otp = String(randomInt(0, 100_000_000)).padStart(8, "0");
-  const otpId = randomUUID();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
-  await execute(
-    `INSERT INTO login_otps (
-       id, email, purpose, otp_hash, attempts, expires_at, request_fingerprint, created_at
-     ) VALUES (?, ?, 'sign-in', ?, 0, ?, ?, ?)`,
-    [
-      otpId,
-      email,
-      hashOtp(email, otp),
-      expiresAt.toISOString(),
-      requestFingerprint,
-      now.toISOString(),
-    ],
-  );
-  try {
-    await sendLoginOtp(email, otp);
-  } catch (error) {
-    await execute("DELETE FROM login_otps WHERE id = ?", [otpId]);
-    throw error;
+
+  await database().transaction(async (tx) => {
+    const [record] = await tx
+      .insert(loginOtps)
+      .values({
+        email,
+        otpHash: hashOtp(email, otp),
+        expiresAt,
+        requestFingerprint,
+      })
+      .returning({ id: loginOtps.id });
+
+    if (!record) throw new Error("Unable to create sign-in code");
+
+    await publishEvent(
+      {
+        type: "auth.login-otp.requested",
+        aggregateType: "login-otp",
+        aggregateId: record.id,
+        payload: { email, otp, expiresAt: expiresAt.toISOString() },
+      },
+      tx,
+    );
+  });
+
+  const delivery = await dispatchPendingEvents(10);
+  if (delivery.failed > 0) {
+    throw new Error("Unable to send the sign-in email. Please try again.");
   }
-  return process.env.NODE_ENV === "production" ? {} : { debugOtp: otp };
 }
 
 export async function verifyLoginOtp(
@@ -93,67 +119,88 @@ export async function verifyLoginOtp(
 ): Promise<void> {
   const email = normalizeEmail(rawEmail);
   const otp = rawOtp.replace(/\s+/g, "");
-  if (!isEmail(email) || !/^\d{8}$/.test(otp))
+  if (!isEmail(email) || !/^\d{8}$/.test(otp)) {
     throw new Error("Invalid email or one-time code");
+  }
 
-  const result = await execute(
-    `SELECT id, otp_hash, attempts, expires_at
-       FROM login_otps
-      WHERE email = ? AND purpose = 'sign-in' AND consumed_at IS NULL
+  const accountId = await database().transaction(async (tx) => {
+    const rows = await tx.execute<{
+      id: string;
+      otp_hash: string;
+      attempts: number;
+      expires_at: Date;
+    }>(sql`
+      SELECT id, otp_hash, attempts, expires_at
+      FROM login_otps
+      WHERE email = ${email}
+        AND purpose = 'sign-in'
+        AND consumed_at IS NULL
       ORDER BY created_at DESC
-      LIMIT 1`,
-    [email],
-  );
-  const row = result.rows[0];
-  if (!row) throw new Error("Request a new sign-in code");
-  const otpId = String(row.id);
-  const attempts = Number(row.attempts ?? 0);
-  if (attempts >= 5)
-    throw new Error("This code has been locked. Request a new one.");
-  if (new Date(String(row.expires_at)).getTime() <= Date.now())
-    throw new Error("This code has expired");
+      FOR UPDATE
+      LIMIT 1
+    `);
 
-  const valid = safeEqual(String(row.otp_hash), hashOtp(email, otp));
-  if (!valid) {
-    await execute(
-      "UPDATE login_otps SET attempts = attempts + 1 WHERE id = ?",
-      [otpId],
-    );
-    throw new Error("The one-time code is incorrect");
-  }
+    const row = rows[0];
+    if (!row) throw new Error("Request a new sign-in code");
+    if (row.attempts >= 5) {
+      throw new Error("This code has been locked. Request a new one.");
+    }
+    if (new Date(row.expires_at).getTime() <= Date.now()) {
+      throw new Error("This code has expired");
+    }
 
-  const now = new Date().toISOString();
-  await execute("UPDATE login_otps SET consumed_at = ? WHERE id = ?", [
-    now,
-    otpId,
-  ]);
-  const account = await execute(
-    "SELECT id, handle FROM accounts WHERE email = ? LIMIT 1",
-    [email],
-  );
-  let accountId = account.rows[0] ? String(account.rows[0].id) : null;
-  if (!accountId) {
-    accountId = randomUUID();
-    const handle = await uniqueHandle(email);
-    await executeBatch([
-      {
-        sql: `INSERT INTO accounts (id, email, handle, display_name, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?)`,
-        args: [accountId, email, handle, displayNameFromEmail(email), now, now],
-      },
-      {
-        sql: `INSERT INTO registry_namespaces (slug, namespace_type, owner_account_id, created_at)
-              VALUES (?, 'user', ?, ?)`,
-        args: [handle, accountId, now],
-      },
-    ]);
-  } else {
-    const handle = String(account.rows[0]?.handle);
-    await execute(
-      `INSERT OR IGNORE INTO registry_namespaces (slug, namespace_type, owner_account_id, created_at)
-       VALUES (?, 'user', ?, ?)`,
-      [handle, accountId, now],
-    );
-  }
+    const valid = safeEqual(row.otp_hash, hashOtp(email, otp));
+    if (!valid) {
+      await tx
+        .update(loginOtps)
+        .set({ attempts: sql`${loginOtps.attempts} + 1` })
+        .where(eq(loginOtps.id, row.id));
+      throw new Error("The one-time code is incorrect");
+    }
+
+    await tx
+      .update(loginOtps)
+      .set({ consumedAt: new Date() })
+      .where(and(eq(loginOtps.id, row.id), isNull(loginOtps.consumedAt)));
+
+    const existing = await tx
+      .select({ id: accounts.id, handle: accounts.handle })
+      .from(accounts)
+      .where(eq(accounts.email, email))
+      .limit(1);
+
+    if (existing[0]) {
+      await tx
+        .insert(registryNamespaces)
+        .values({
+          slug: existing[0].handle,
+          namespaceType: "user",
+          ownerAccountId: existing[0].id,
+        })
+        .onConflictDoNothing();
+      return existing[0].id;
+    }
+
+    const handle = await uniqueHandle(email, tx);
+    const [created] = await tx
+      .insert(accounts)
+      .values({
+        email,
+        handle,
+        displayName: displayNameFromEmail(email),
+      })
+      .returning({ id: accounts.id });
+
+    if (!created) throw new Error("Unable to create account");
+
+    await tx.insert(registryNamespaces).values({
+      slug: handle,
+      namespaceType: "user",
+      ownerAccountId: created.id,
+    });
+
+    return created.id;
+  });
+
   await createSession(accountId);
 }
