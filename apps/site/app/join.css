@@ -1,0 +1,170 @@
+.join-page {
+  display: grid;
+  min-height: calc(100vh - 3.5rem);
+  grid-template-columns: minmax(0, 0.9fr) minmax(28rem, 1.1fr);
+  background: hsl(var(--background));
+}
+
+.join-context,
+.join-card {
+  padding: clamp(2rem, 6vw, 6rem);
+}
+
+.join-context {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid hsl(var(--border));
+  background:
+    linear-gradient(to bottom right, hsl(var(--accent) / 0.09), transparent 48%),
+    hsl(var(--surface));
+}
+
+.join-context h1 {
+  max-width: 11ch;
+  margin-top: 1rem;
+  font-family: var(--font-inter-tight);
+  font-size: clamp(2.75rem, 5vw, 5rem);
+  font-weight: 780;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+}
+
+.join-context > p {
+  max-width: 34rem;
+  margin-top: 1.5rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.7;
+}
+
+.join-benefits {
+  display: grid;
+  max-width: 36rem;
+  gap: 0.75rem;
+  margin-top: 3rem;
+}
+
+.join-benefits article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.9rem;
+  background: hsl(var(--card) / 0.72);
+}
+
+.join-benefits svg {
+  width: 1.1rem;
+  margin-top: 0.15rem;
+  color: hsl(var(--accent));
+}
+
+.join-benefits strong,
+.join-benefits span {
+  display: block;
+}
+
+.join-benefits strong {
+  font-size: 0.86rem;
+}
+
+.join-benefits span {
+  margin-top: 0.25rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.join-card {
+  display: flex;
+  width: min(100%, 42rem);
+  flex-direction: column;
+  justify-content: center;
+  justify-self: center;
+}
+
+.join-card h2 {
+  margin-top: 0.55rem;
+  font-family: var(--font-inter-tight);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 760;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.join-card .auth-card-heading p {
+  margin-top: 0.9rem;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.6;
+}
+
+.join-form-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  padding: 0.9rem;
+  border-radius: 0.75rem;
+  background: hsl(var(--muted) / 0.55);
+  color: hsl(var(--muted-foreground));
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.join-form-note svg {
+  width: 1rem;
+  color: hsl(var(--foreground));
+}
+
+.join-form-note p,
+.join-signed-out-state p {
+  margin: 0;
+}
+
+.join-signed-out-state {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.join-signed-out-state > p {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.76rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .join-page {
+    grid-template-columns: 1fr;
+  }
+
+  .join-context {
+    border-right: 0;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .join-benefits {
+    display: none;
+  }
+
+  .join-card {
+    width: 100%;
+    padding-block: 4rem 5rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .join-context,
+  .join-card {
+    padding-inline: 1.25rem;
+  }
+
+  .join-context h1 {
+    font-size: 2.7rem;
+  }
+
+  .join-card .auth-card-heading {
+    grid-template-columns: 1fr;
+  }
+}
