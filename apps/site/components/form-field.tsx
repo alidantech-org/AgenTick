@@ -10,9 +10,9 @@ export function FormField({
 }: {
   id: string;
   label: string;
-  hint?: string;
-  error?: string;
-  required?: boolean;
+  hint?: string | undefined;
+  error?: string | undefined;
+  required?: boolean | undefined;
   children: ReactNode;
 }) {
   const hintId = hint ? `${id}-hint` : undefined;
@@ -45,7 +45,7 @@ export function FormSection({
   children,
 }: {
   title: string;
-  description?: string;
+  description?: string | undefined;
   children: ReactNode;
 }) {
   return (
