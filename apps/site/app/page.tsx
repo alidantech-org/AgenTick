@@ -25,7 +25,12 @@ import { GridPattern } from "@/components/grid-pattern";
 import { SyntaxHighlight } from "@/components/syntax-highlight";
 import { searchPublicSkills } from "@/lib/registry/service";
 
-const values: { icon: React.ComponentType; title: string; copy: string; note?: string }[] = [
+const values: {
+  icon: React.ComponentType;
+  title: string;
+  copy: string;
+  note?: string;
+}[] = [
   {
     icon: CircleAlert,
     title: "Don't let AI quietly destroy your codebase.",
