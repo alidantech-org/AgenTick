@@ -41,6 +41,10 @@ export const packageStatusEnum = registrySchema.enum("package_status", [
   "quarantined",
   "deleted",
 ]);
+export const sourceExtensionEnum = registrySchema.enum("source_extension", [
+  "sl",
+  "skillib",
+]);
 export const compatibilityEnum = registrySchema.enum("compatibility", [
   "tested",
   "recommended",
@@ -155,6 +159,16 @@ export const versions = registrySchema.table(
     artifactId: uuid("artifact_id").references(() => storageObjects.id, {
       onDelete: "restrict",
     }),
+    sourceExtension: sourceExtensionEnum("source_extension").notNull().default("skillib"),
+    languageVersion: text("language_version").notNull().default("0.1"),
+    compilerVersion: text("compiler_version").notNull().default("0.1.0"),
+    sourceText: text("source_text").notNull().default(""),
+    compiledIr: jsonb("compiled_ir").$type<Record<string, unknown>>().notNull().default({}),
+    sourceHash: text("source_hash").notNull().default(""),
+    irHash: text("ir_hash").notNull().default(""),
+    dependencies: jsonb("dependencies").$type<string[]>().notNull().default([]),
+    permissions: jsonb("permissions").$type<string[]>().notNull().default([]),
+    diagnostics: jsonb("diagnostics").$type<Array<Record<string, unknown>>>().notNull().default([]),
     bundle: jsonb("bundle").$type<Record<string, unknown>>().notNull(),
     manifest: jsonb("manifest")
       .$type<Record<string, unknown>>()
@@ -174,9 +188,7 @@ export const versions = registrySchema.table(
     yankedAt: timestamp("yanked_at", { withTimezone: true }),
     yankedByAccountId: uuid("yanked_by_account_id").references(
       () => accounts.id,
-      {
-        onDelete: "set null",
-      },
+      { onDelete: "set null" },
     ),
     yankReason: text("yank_reason"),
   },
@@ -193,6 +205,8 @@ export const versions = registrySchema.table(
       table.skillId,
       table.publishedAt,
     ),
+    index("versions_source_hash_idx").on(table.sourceHash),
+    index("versions_ir_hash_idx").on(table.irHash),
   ],
 );
 
