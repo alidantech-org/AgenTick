@@ -26,7 +26,6 @@ jobs:
         run: >-
           pnpm exec prettier --write
           .github/workflows/ci.yml
-          apps/site/.env.example
           apps/site/package.json
           apps/site/drizzle.config.ts
           apps/site/drizzle/meta/_journal.json
