@@ -6,7 +6,8 @@ import { optionalAccount } from "@/lib/auth/dal";
 
 export const metadata: Metadata = {
   title: "Join Organization",
-  description: "Accept an invitation to a shared Skillib organization and package namespace.",
+  description:
+    "Accept an invitation to a shared Skillib organization and package namespace.",
 };
 
 export default async function JoinPage({
@@ -33,21 +34,27 @@ export default async function JoinPage({
             <Building2 aria-hidden="true" />
             <div>
               <strong>Shared Namespace</strong>
-              <span>Publish and maintain packages under the organization slug</span>
+              <span>
+                Publish and maintain packages under the organization slug
+              </span>
             </div>
           </article>
           <article>
             <ShieldCheck aria-hidden="true" />
             <div>
               <strong>Role-Based Access</strong>
-              <span>Your permissions are assigned by organization administrators</span>
+              <span>
+                Your permissions are assigned by organization administrators
+              </span>
             </div>
           </article>
           <article>
             <MailCheck aria-hidden="true" />
             <div>
               <strong>Email-Bound Invitation</strong>
-              <span>Sign in with the same address that received the invitation</span>
+              <span>
+                Sign in with the same address that received the invitation
+              </span>
             </div>
           </article>
         </div>
@@ -87,8 +94,8 @@ export default async function JoinPage({
               <ArrowRight aria-hidden="true" />
             </Link>
             <p>
-              New to Skillib? Your account is created automatically after you verify
-              your email.
+              New to Skillib? Your account is created automatically after you
+              verify your email.
             </p>
           </div>
         )}

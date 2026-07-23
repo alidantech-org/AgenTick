@@ -1,5 +1,9 @@
-html.dark { color-scheme: dark; }
-html:not(.dark) { color-scheme: light; }
+html.dark {
+  color-scheme: dark;
+}
+html:not(.dark) {
+  color-scheme: light;
+}
 
 .skip-link {
   position: fixed;
@@ -23,14 +27,32 @@ html:not(.dark) { color-scheme: light; }
   outline-offset: 2px;
 }
 
-button, a, input, textarea, select, summary {
+button,
+a,
+input,
+textarea,
+select,
+summary {
   touch-action: manipulation;
 }
 
-h1, h2, h3, h4 { text-wrap: balance; }
-p, li { text-wrap: pretty; }
-code, time { font-variant-numeric: tabular-nums; }
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+p,
+li {
+  text-wrap: pretty;
+}
+code,
+time {
+  font-variant-numeric: tabular-nums;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .skip-link { transition: none; }
+  .skip-link {
+    transition: none;
+  }
 }

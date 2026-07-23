@@ -5,7 +5,8 @@ import { AuthForm } from "@/components/auth-form";
 
 export const metadata: Metadata = {
   title: "Create Account",
-  description: "Create a Skillib publisher account with secure passwordless access.",
+  description:
+    "Create a Skillib publisher account with secure passwordless access.",
 };
 
 export default function SignupPage() {
@@ -13,7 +14,11 @@ export default function SignupPage() {
     <main className="auth-page" id="main-content">
       <AuthContextPanel mode="signup" />
       <div className="auth-form-column">
-        <Suspense fallback={<div className="auth-card auth-card-skeleton">Loading…</div>}>
+        <Suspense
+          fallback={
+            <div className="auth-card auth-card-skeleton">Loading…</div>
+          }
+        >
           <AuthForm mode="signup" />
         </Suspense>
       </div>

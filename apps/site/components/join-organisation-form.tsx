@@ -83,8 +83,8 @@ export function JoinOrganisationForm({
       <div className="join-form-note">
         <Building2 aria-hidden="true" />
         <p>
-          Membership grants access only to the organization and package permissions
-          assigned by its administrators.
+          Membership grants access only to the organization and package
+          permissions assigned by its administrators.
         </p>
       </div>
     </form>

@@ -1,6 +1,12 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, CheckCircle2, KeyRound, Mail } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  KeyRound,
+  Mail,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -30,7 +36,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       });
       const data = (await response.json()) as { ok?: boolean; error?: string };
       if (!response.ok) {
-        setError(data.error ?? "Enter an email address that can receive a code");
+        setError(
+          data.error ?? "Enter an email address that can receive a code",
+        );
         return;
       }
       setStep("otp");
@@ -129,7 +137,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
                 autoComplete="email"
                 spellCheck={false}
                 inputMode="email"
-                aria-describedby={error ? "auth-email-hint auth-email-error" : "auth-email-hint"}
+                aria-describedby={
+                  error ? "auth-email-hint auth-email-error" : "auth-email-hint"
+                }
                 aria-invalid={Boolean(error)}
                 required
               />
@@ -169,7 +179,9 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
               autoComplete="one-time-code"
               spellCheck={false}
               className="otp-input"
-              aria-describedby={error ? "auth-code-hint auth-code-error" : "auth-code-hint"}
+              aria-describedby={
+                error ? "auth-code-hint auth-code-error" : "auth-code-hint"
+              }
               aria-invalid={Boolean(error)}
               required
             />
@@ -183,7 +195,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             {!busy && <ArrowRight aria-hidden="true" />}
           </button>
 
-          <button type="button" className="auth-back-button" onClick={changeEmail}>
+          <button
+            type="button"
+            className="auth-back-button"
+            onClick={changeEmail}
+          >
             <ArrowLeft aria-hidden="true" />
             Use a Different Email
           </button>
@@ -204,8 +220,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       </p>
 
       <p className="auth-legal">
-        By continuing, you agree to use Skillib responsibly and protect access to
-        your publishing identity.
+        By continuing, you agree to use Skillib responsibly and protect access
+        to your publishing identity.
       </p>
     </section>
   );

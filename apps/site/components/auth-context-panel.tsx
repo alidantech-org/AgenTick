@@ -38,7 +38,9 @@ export function AuthContextPanel({ mode }: { mode: "login" | "signup" }) {
           <ShieldCheck aria-hidden="true" />
           <div>
             <strong>Passwordless Security</strong>
-            <span>Short-lived codes remove passwords from the attack surface</span>
+            <span>
+              Short-lived codes remove passwords from the attack surface
+            </span>
           </div>
         </article>
         <article>

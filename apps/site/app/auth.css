@@ -24,7 +24,11 @@
   pointer-events: none;
   background-image:
     linear-gradient(hsl(var(--ink-foreground) / 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, hsl(var(--ink-foreground) / 0.045) 1px, transparent 1px);
+    linear-gradient(
+      90deg,
+      hsl(var(--ink-foreground) / 0.045) 1px,
+      transparent 1px
+    );
   background-size: 42px 42px;
   mask-image: linear-gradient(to bottom right, black, transparent 78%);
 }
@@ -143,7 +147,11 @@
   place-items: center;
   padding: clamp(2rem, 6vw, 6rem);
   background:
-    radial-gradient(circle at 90% 5%, hsl(var(--accent) / 0.08), transparent 28rem),
+    radial-gradient(
+      circle at 90% 5%,
+      hsl(var(--accent) / 0.08),
+      transparent 28rem
+    ),
     hsl(var(--background));
 }
 
