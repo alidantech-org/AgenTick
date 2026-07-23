@@ -38,17 +38,22 @@ export async function dispatchPendingEvents(limit = 10): Promise<{
   processed: number;
   failed: number;
 }> {
-  const events = await claimEvents(limit);
+  const claimed = await claimEvents(limit);
   let processed = 0;
   let failed = 0;
 
-  for (const event of events) {
+  for (const event of claimed) {
     try {
       await dispatchEvent(event.eventType, event.payload);
-      await completeEvent(event.id);
+      await completeEvent(event.id, event.deliveryId);
       processed += 1;
     } catch (error) {
-      await failEvent(event.id, event.attempts, error);
+      await failEvent(
+        event.id,
+        event.deliveryId,
+        event.attempts,
+        error,
+      );
       failed += 1;
     }
   }
