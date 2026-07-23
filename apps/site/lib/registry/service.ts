@@ -83,7 +83,10 @@ export async function searchPublicSkills(
   const query = input.query?.trim() ?? "";
   const limit = Math.min(Math.max(input.limit ?? 24, 1), 100);
   const pattern = `%${query}%`;
-  const filters = [eq(skills.visibility, "public"), eq(skills.status, "active")];
+  const filters = [
+    eq(skills.visibility, "public"),
+    eq(skills.status, "active"),
+  ];
 
   if (query) {
     filters.push(
@@ -283,8 +286,8 @@ export async function getSkillDetail(
     bundle: validateSkillBundle(version.bundle),
   }));
   const latestBundle =
-    bundles.find((version) => version.version === skill.latestVersion)?.bundle ??
-    bundles[0]?.bundle;
+    bundles.find((version) => version.version === skill.latestVersion)
+      ?.bundle ?? bundles[0]?.bundle;
   const skillMarkdown = latestBundle?.files.find(
     (file) => file.path === "SKILL.md",
   );
@@ -380,7 +383,9 @@ function versionParts(version: string): {
   patch: number;
   prerelease: string | null;
 } {
-  const match = version.replace(/^v/, "").match(/^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
+  const match = version
+    .replace(/^v/, "")
+    .match(/^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
   if (!match) throw new Error(`Invalid semantic version: ${version}`);
   return {
     major: Number(match[1]),

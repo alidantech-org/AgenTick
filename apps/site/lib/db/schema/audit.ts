@@ -1,4 +1,11 @@
-import { index, jsonb, pgSchema, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  jsonb,
+  pgSchema,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { accounts } from "./users";
 
 export const auditSchema = pgSchema("audit");
@@ -23,7 +30,10 @@ export const entries = auditSchema.table(
     userAgent: text("user_agent"),
     before: jsonb("before").$type<Record<string, unknown> | null>(),
     after: jsonb("after").$type<Record<string, unknown> | null>(),
-    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
   },
   (table) => [
     index("entries_target_idx").on(

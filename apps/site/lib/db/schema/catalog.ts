@@ -1,4 +1,14 @@
-import { boolean, index, integer, jsonb, pgSchema, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgSchema,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt, updatedAt } from "./common";
 
 export const catalogSchema = pgSchema("catalog");
@@ -169,12 +179,18 @@ export const aiModels = catalogSchema.table(
     status: modelStatusEnum("status").notNull().default("active"),
     deprecatedAt: timestamp("deprecated_at", { withTimezone: true }),
     replacedById: uuid("replaced_by_id"),
-    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     createdAt,
     updatedAt,
   },
   (table) => [
-    uniqueIndex("ai_models_provider_slug_unique").on(table.providerId, table.slug),
+    uniqueIndex("ai_models_provider_slug_unique").on(
+      table.providerId,
+      table.slug,
+    ),
     index("ai_models_status_idx").on(table.status),
   ],
 );
@@ -225,8 +241,13 @@ export const seedRuns = catalogSchema.table("seed_runs", {
   source: text("source").notNull(),
   sourceVersion: text("source_version").notNull(),
   checksum: text("checksum"),
-  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
-  completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  metadata: jsonb("metadata")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default({}),
+  completedAt: timestamp("completed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 export type Country = typeof countries.$inferSelect;

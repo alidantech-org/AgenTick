@@ -1,4 +1,12 @@
-import { index, pgSchema, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgSchema,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt } from "./common";
 import { accounts } from "./users";
 
@@ -89,7 +97,9 @@ export const moderationCases = platformSchema.table(
     resolvedAt: timestamp("resolved_at", { withTimezone: true }),
     createdAt,
   },
-  (table) => [index("moderation_cases_status_idx").on(table.status, table.createdAt)],
+  (table) => [
+    index("moderation_cases_status_idx").on(table.status, table.createdAt),
+  ],
 );
 
 export type PlatformRole = typeof roles.$inferSelect;

@@ -1,4 +1,13 @@
-import { index, integer, jsonb, pgSchema, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgSchema,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt } from "./common";
 
 export const eventsSchema = pgSchema("events");
@@ -71,7 +80,9 @@ export const deliveries = eventsSchema.table(
 
 export const deadLetters = eventsSchema.table("dead_letters", {
   id: uuid("id").defaultRandom().primaryKey(),
-  eventId: uuid("event_id").references(() => outbox.id, { onDelete: "set null" }),
+  eventId: uuid("event_id").references(() => outbox.id, {
+    onDelete: "set null",
+  }),
   consumer: text("consumer").notNull(),
   payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
   error: text("error").notNull(),

@@ -72,9 +72,12 @@ export const uploads = storageSchema.table(
     expectedSizeBytes: bigint("expected_size_bytes", { mode: "number" }),
     expectedSha512: text("expected_sha512"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    completedObjectId: uuid("completed_object_id").references(() => objects.id, {
-      onDelete: "set null",
-    }),
+    completedObjectId: uuid("completed_object_id").references(
+      () => objects.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     createdAt,
   },
   (table) => [

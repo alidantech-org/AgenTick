@@ -131,7 +131,10 @@ export const packages = registrySchema.table(
       table.updatedAt,
     ),
     index("packages_owner_idx").on(table.ownerAccountId, table.updatedAt),
-    index("packages_organization_idx").on(table.organizationId, table.updatedAt),
+    index("packages_organization_idx").on(
+      table.organizationId,
+      table.updatedAt,
+    ),
   ],
 );
 
@@ -153,7 +156,10 @@ export const versions = registrySchema.table(
       onDelete: "restrict",
     }),
     bundle: jsonb("bundle").$type<Record<string, unknown>>().notNull(),
-    manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull().default({}),
+    manifest: jsonb("manifest")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull(),
     provenance: jsonb("provenance")
       .$type<Record<string, unknown>>()
@@ -166,9 +172,12 @@ export const versions = registrySchema.table(
       .notNull()
       .defaultNow(),
     yankedAt: timestamp("yanked_at", { withTimezone: true }),
-    yankedByAccountId: uuid("yanked_by_account_id").references(() => accounts.id, {
-      onDelete: "set null",
-    }),
+    yankedByAccountId: uuid("yanked_by_account_id").references(
+      () => accounts.id,
+      {
+        onDelete: "set null",
+      },
+    ),
     yankReason: text("yank_reason"),
   },
   (table) => [

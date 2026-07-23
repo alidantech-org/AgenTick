@@ -1,4 +1,15 @@
-import { bigint, date, index, jsonb, pgSchema, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  date,
+  index,
+  jsonb,
+  pgSchema,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt } from "./common";
 import { accounts } from "./users";
 import { tokens } from "./auth";
@@ -35,7 +46,10 @@ export const events = analyticsSchema.table(
       .notNull()
       .defaultNow(),
     countryCode: text("country_code"),
-    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     createdAt,
   },
   (table) => [

@@ -48,12 +48,7 @@ export async function dispatchPendingEvents(limit = 10): Promise<{
       await completeEvent(event.id, event.deliveryId);
       processed += 1;
     } catch (error) {
-      await failEvent(
-        event.id,
-        event.deliveryId,
-        event.attempts,
-        error,
-      );
+      await failEvent(event.id, event.deliveryId, event.attempts, error);
       failed += 1;
     }
   }
