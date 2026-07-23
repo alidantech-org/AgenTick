@@ -7,6 +7,13 @@ export async function GET(request: Request) {
   const sortValue = url.searchParams.get("sort");
   const sort =
     sortValue === "newest" || sortValue === "updated" ? sortValue : "popular";
-  const skills = await searchPublicSkills({ query, sort, limit: 12 });
-  return NextResponse.json({ skills });
+  const skills = await searchPublicSkills({ query, sort, limit: 24 });
+  return NextResponse.json(
+    skills.map((skill) => ({
+      id: `@${skill.namespace}/${skill.name}`,
+      description: skill.description,
+      latest: skill.latestVersion ?? "unreleased",
+      tags: skill.keywords,
+    })),
+  );
 }
