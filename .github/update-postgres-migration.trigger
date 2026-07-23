@@ -1,1 +1,1 @@
-update postgres migration once
+update postgres migration once - retry
