@@ -1,4 +1,4 @@
-import { index, pgEnum, pgSchema, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, pgSchema, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { createdAt, updatedAt } from "./common";
 
 export const usersSchema = pgSchema("users");
@@ -37,7 +37,7 @@ export const emails = usersSchema.table(
       .references(() => accounts.id, { onDelete: "cascade" }),
     email: text("email").notNull(),
     normalizedEmail: text("normalized_email").notNull(),
-    isPrimary: text("is_primary").notNull().default("true"),
+    isPrimary: boolean("is_primary").notNull().default(true),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     createdAt,
   },
