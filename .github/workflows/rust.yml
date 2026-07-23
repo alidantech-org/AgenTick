@@ -39,8 +39,8 @@ jobs:
       - name: Format ephemeral checkout
         run: cargo fmt --all
       - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --quiet --workspace --all-targets -- -D warnings
       - name: Test
-        run: cargo test --workspace
+        run: cargo test --quiet --workspace
       - name: Release build
-        run: cargo build --workspace --release
+        run: cargo build --quiet --workspace --release
