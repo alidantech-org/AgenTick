@@ -1,6 +1,7 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -28,23 +29,27 @@ function mailTransport(): nodemailer.Transporter {
   }
 
   const useAuth = process.env.SMTP_AUTH !== "false";
-  const auth = useAuth
-    ? { user: required("SMTP_USER"), pass: required("SMTP_PASSWORD") }
-    : undefined;
-
-  transporter = nodemailer.createTransport({
+  const options: SMTPTransport.Options = {
     host: required("SMTP_HOST"),
     port,
     secure: process.env.SMTP_SECURE === "true",
-    auth,
     pool: process.env.SMTP_POOL !== "false",
     maxConnections: Number(process.env.SMTP_MAX_CONNECTIONS ?? 5),
     maxMessages: Number(process.env.SMTP_MAX_MESSAGES ?? 100),
     connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS ?? 10_000),
     greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS ?? 10_000),
     socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS ?? 20_000),
-  });
+    ...(useAuth
+      ? {
+          auth: {
+            user: required("SMTP_USER"),
+            pass: required("SMTP_PASSWORD"),
+          },
+        }
+      : {}),
+  };
 
+  transporter = nodemailer.createTransport(options);
   return transporter;
 }
 
@@ -58,7 +63,9 @@ interface MailMessage {
 async function send(message: MailMessage): Promise<void> {
   await mailTransport().sendMail({
     from: required("SMTP_FROM"),
-    replyTo: process.env.SMTP_REPLY_TO?.trim() || undefined,
+    ...(process.env.SMTP_REPLY_TO?.trim()
+      ? { replyTo: process.env.SMTP_REPLY_TO.trim() }
+      : {}),
     to: message.to,
     subject: message.subject,
     html: message.html,
