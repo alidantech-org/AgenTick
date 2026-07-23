@@ -1,3 +1,4 @@
+import "./account-overview.css";
 import Link from "next/link";
 import {
   ArrowRight,
