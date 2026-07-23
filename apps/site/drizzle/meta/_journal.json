@@ -22,6 +22,13 @@
       "when": 1784818800000,
       "tag": "0001_domain_registry",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784822400000,
+      "tag": "0002_skillib_language_releases",
+      "breakpoints": true
     }
   ]
 }
