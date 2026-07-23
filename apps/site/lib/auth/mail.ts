@@ -27,14 +27,16 @@ function mailTransport(): nodemailer.Transporter {
     throw new Error("SMTP_PORT must be a valid TCP port");
   }
 
+  const useAuth = process.env.SMTP_AUTH !== "false";
+  const auth = useAuth
+    ? { user: required("SMTP_USER"), pass: required("SMTP_PASSWORD") }
+    : undefined;
+
   transporter = nodemailer.createTransport({
     host: required("SMTP_HOST"),
     port,
     secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: required("SMTP_USER"),
-      pass: required("SMTP_PASSWORD"),
-    },
+    auth,
     pool: process.env.SMTP_POOL !== "false",
     maxConnections: Number(process.env.SMTP_MAX_CONNECTIONS ?? 5),
     maxMessages: Number(process.env.SMTP_MAX_MESSAGES ?? 100),
