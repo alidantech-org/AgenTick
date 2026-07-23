@@ -1,11 +1,20 @@
-import { index, integer, jsonb, pgSchema, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  jsonb,
+  pgSchema,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt } from "./common";
 import { accounts } from "./users";
 
 export const authSchema = pgSchema("auth");
-export const challengeTypeEnum = authSchema.enum("challenge_type", [
-  "sign_in",
-  "verify_email",
+export const challengePurposeEnum = authSchema.enum("challenge_purpose", [
+  "sign-in",
+  "verify-email",
   "recovery",
 ]);
 export const tokenStatusEnum = authSchema.enum("token_status", [
@@ -49,8 +58,8 @@ export const challenges = authSchema.table(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     email: text("email").notNull(),
-    type: challengeTypeEnum("type").notNull().default("sign_in"),
-    secretHash: text("secret_hash").notNull(),
+    purpose: challengePurposeEnum("purpose").notNull().default("sign-in"),
+    otpHash: text("otp_hash").notNull(),
     attempts: integer("attempts").notNull().default(0),
     maxAttempts: integer("max_attempts").notNull().default(5),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
@@ -74,8 +83,8 @@ export const tokens = authSchema.table(
     accountId: uuid("account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "cascade" }),
-    prefix: text("prefix").notNull(),
-    secretHash: text("secret_hash").notNull(),
+    tokenPrefix: text("token_prefix").notNull(),
+    tokenHash: text("token_hash").notNull(),
     name: text("name").notNull(),
     scopes: jsonb("scopes").$type<string[]>().notNull().default([]),
     status: tokenStatusEnum("status").notNull().default("active"),
@@ -85,7 +94,7 @@ export const tokens = authSchema.table(
     createdAt,
   },
   (table) => [
-    uniqueIndex("tokens_secret_hash_unique").on(table.secretHash),
+    uniqueIndex("tokens_token_hash_unique").on(table.tokenHash),
     index("tokens_account_idx").on(table.accountId),
   ],
 );
