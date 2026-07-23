@@ -1,0 +1,55 @@
+name: Update PostgreSQL migration once
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/update-postgres-migration.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: chatgpt/develop
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: corepack enable
+      - run: pnpm install --no-frozen-lockfile
+      - name: Format migration files
+        run: >-
+          pnpm exec prettier --write
+          .github/workflows/ci.yml
+          apps/site/.env.example
+          apps/site/package.json
+          apps/site/drizzle.config.ts
+          apps/site/drizzle/meta/_journal.json
+          apps/site/lib/db/client.ts
+          apps/site/lib/db/schema.ts
+          apps/site/lib/events/bus.ts
+          apps/site/lib/events/dispatcher.ts
+          apps/site/lib/auth/mail.ts
+          apps/site/lib/auth/service.ts
+          apps/site/lib/auth/session.ts
+          apps/site/lib/auth/dal.ts
+          apps/site/lib/account/service.ts
+          apps/site/lib/registry/service.ts
+          apps/site/components/auth-form.tsx
+          apps/site/app/api/auth/request-otp/route.ts
+          apps/site/app/api/internal/events/dispatch/route.ts
+      - name: Commit lockfile and formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
+          git add pnpm-lock.yaml .github/workflows/ci.yml apps/site
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'chore(site): lock and format postgres migration'
+          git push origin HEAD:chatgpt/develop
