@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { cookies, headers } from "next/headers";
 import { database } from "@/lib/db/client";
 import { accounts, sessions } from "@/lib/db/schema";
@@ -54,8 +54,17 @@ export async function deleteSession(): Promise<void> {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (token) {
     await database()
-      .delete(sessions)
-      .where(eq(sessions.tokenHash, hashSessionToken(token)));
+      .update(sessions)
+      .set({
+        revokedAt: new Date(),
+        revocationReason: "logout",
+      })
+      .where(
+        and(
+          eq(sessions.tokenHash, hashSessionToken(token)),
+          isNull(sessions.revokedAt),
+        ),
+      );
   }
   cookieStore.delete(SESSION_COOKIE);
 }
@@ -75,7 +84,13 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
     })
     .from(sessions)
     .innerJoin(accounts, eq(accounts.id, sessions.accountId))
-    .where(and(eq(sessions.tokenHash, tokenHash), gt(sessions.expiresAt, now)))
+    .where(
+      and(
+        eq(sessions.tokenHash, tokenHash),
+        gt(sessions.expiresAt, now),
+        isNull(sessions.revokedAt),
+      ),
+    )
     .limit(1);
 
   const account = rows[0];
@@ -84,7 +99,12 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
   await database()
     .update(sessions)
     .set({ lastSeenAt: now })
-    .where(eq(sessions.tokenHash, tokenHash));
+    .where(
+      and(
+        eq(sessions.tokenHash, tokenHash),
+        isNull(sessions.revokedAt),
+      ),
+    );
 
   return account;
 }
