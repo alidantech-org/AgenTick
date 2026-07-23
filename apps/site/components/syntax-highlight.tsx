@@ -5,6 +5,8 @@ type SyntaxHighlightProps = {
   code: string;
   language?: string;
   className?: string;
+  theme?: "adaptive" | "dark";
+  showLanguage?: boolean;
 };
 
 const languageAliases: Record<string, string> = {
@@ -21,6 +23,8 @@ export async function SyntaxHighlight({
   code,
   language = "text",
   className,
+  theme = "adaptive",
+  showLanguage = true,
 }: SyntaxHighlightProps) {
   const normalizedLanguage =
     languageAliases[language.toLowerCase()] ?? language.toLowerCase();
@@ -47,7 +51,8 @@ export async function SyntaxHighlight({
   return (
     <div
       className={cn("syntax-highlight", className)}
-      data-language={language || undefined}
+      data-language={showLanguage ? language || undefined : undefined}
+      data-theme={theme}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

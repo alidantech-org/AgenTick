@@ -549,12 +549,20 @@
     @apply m-0 overflow-x-auto bg-transparent! p-5 font-mono text-xs leading-6;
   }
   .dark .syntax-highlight .shiki,
-  .dark .syntax-highlight .shiki span {
+  .dark .syntax-highlight .shiki span,
+  .syntax-highlight[data-theme="dark"] .shiki,
+  .syntax-highlight[data-theme="dark"] .shiki span {
     color: var(--shiki-dark) !important;
     background-color: transparent !important;
     font-style: var(--shiki-dark-font-style) !important;
     font-weight: var(--shiki-dark-font-weight) !important;
     text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+  .syntax-highlight[data-theme="dark"] {
+    @apply border-0 bg-transparent;
+  }
+  .syntax-highlight[data-theme="dark"] .shiki {
+    @apply p-0 text-[13px] leading-7;
   }
 
   .arrow-link {

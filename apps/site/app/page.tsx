@@ -1,7 +1,11 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  Check,
   CircleAlert,
+  GitBranch,
+  Library,
+  LockKeyhole,
   RefreshCcw,
   Search,
   ShieldCheck,
@@ -125,6 +129,16 @@ const pullOutput = `$ skillib pull
 ✓ sha512 integrity verified
 ✓ installed read-only`;
 
+const auditTerminal = `$ pnpm dlx skillib init
+✓ agents/ initialized without touching your source
+
+$ skillib watch
+  watching 218 files · dashboard :4317
+
+CHANGE src/modules/payments/service.ts
+FINDING · protected boundary crossed
+✓ fixed · typecheck · tests · audit recorded`;
+
 export default async function HomePage() {
   const featured = await searchPublicSkills({ sort: "popular", limit: 3 });
 
@@ -198,7 +212,7 @@ export default async function HomePage() {
             {/* Stamp — the same seal used later in the empty registry state */}
             <Stamp
               label="EVIDENCE-BACKED"
-              className="absolute -top-4 right-8 z-10"
+              className="absolute -top-4 right-8 z-10 border"
             />
 
             <BorderBeam
@@ -218,38 +232,13 @@ export default async function HomePage() {
                   skillib — ~/your-project
                 </span>
               </div>
-              <div className="space-y-1 px-5 py-6 font-mono text-[13px] leading-7 text-ink-foreground/75 sm:px-7">
-                <p>
-                  <span className="text-ink-foreground/40">$</span>{" "}
-                  <span className="text-ink-foreground">
-                    pnpm dlx skillib init
-                  </span>
-                </p>
-                <p className="text-ink-foreground">
-                  ✓ agents/ initialized without touching your source
-                </p>
-                <p>&nbsp;</p>
-                <p>
-                  <span className="text-ink-foreground/40">$</span>{" "}
-                  <span className="text-ink-foreground">skillib watch</span>
-                </p>
-                <p className="pl-4 text-ink-foreground/45">
-                  watching 218 files · dashboard :4317
-                </p>
-                <p>&nbsp;</p>
-                <p>
-                  <span className="text-ink-foreground/45">CHANGE</span>{" "}
-                  <span className="font-semibold text-ink-foreground">
-                    src/modules/payments/service.ts
-                  </span>
-                </p>
-                <p className="inline-flex rounded-md border border-ink-foreground/15 bg-ink-foreground/10 px-2 text-ink-foreground">
-                  FINDING · protected boundary crossed
-                </p>
-                <p className="text-ink-foreground">
-                  ✓ fixed · typecheck · tests · audit recorded
-                </p>
-              </div>
+              <SyntaxHighlight
+                code={auditTerminal}
+                language="shell"
+                theme="dark"
+                showLanguage={false}
+                className="px-5 py-6 sm:px-7 border-none rounded-none text-sm sm:text-base"
+              />
             </BorderBeam>
           </Reveal>
         </div>
@@ -388,7 +377,7 @@ export default async function HomePage() {
           <Reveal>
             <span className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
               Package-manager discipline
-            </p>
+            </span>
             <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
               Skills install like dependencies, not copied snippets.
             </h2>
