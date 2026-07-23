@@ -1,0 +1,35 @@
+name: Format existing site files once
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/format-site-existing.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: chatgpt/develop
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prettier --write apps/site/app/globals.css apps/site/app/page.tsx apps/site/components/skill-readme.tsx
+      - name: Commit formatting
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '4189826+github-actions[bot]@users.noreply.github.com'
+          git add apps/site/app/globals.css apps/site/app/page.tsx apps/site/components/skill-readme.tsx
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'style(site): normalize existing formatting'
+          git push origin HEAD:chatgpt/develop
