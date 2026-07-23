@@ -39,7 +39,20 @@ jobs:
       - name: Format ephemeral checkout
         run: cargo fmt --all
       - name: Clippy
-        run: cargo clippy --quiet --workspace --all-targets -- -D warnings
+        id: clippy
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          cargo clippy --quiet --workspace --all-targets -- -D warnings 2>&1 | tee rust-clippy.log
+      - name: Upload compiler diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-diagnostics
+          path: rust-clippy.log
+      - name: Require clean clippy
+        if: steps.clippy.outcome != 'success'
+        run: exit 1
       - name: Test
         run: cargo test --quiet --workspace
       - name: Release build
