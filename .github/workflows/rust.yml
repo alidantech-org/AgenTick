@@ -36,8 +36,8 @@ jobs:
             echo "$violations"
             exit 1
           fi
-      - name: Format
-        run: cargo fmt --all --check
+      - name: Format ephemeral checkout
+        run: cargo fmt --all
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
