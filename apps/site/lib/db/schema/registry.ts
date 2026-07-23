@@ -1,8 +1,31 @@
-import { bigint, index, integer, jsonb, pgSchema, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgSchema,
+  primaryKey,
+  sql,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt, updatedAt } from "./common";
 import { accounts } from "./users";
 import { organizations, teams } from "./orgs";
-import { categories, tags as catalogTags, aiModels, agentClients, capabilities, programmingLanguages, frameworks, runtimes, packageManagers } from "./catalog";
+import {
+  categories,
+  tags as catalogTags,
+  aiModels,
+  agentClients,
+  capabilities,
+  programmingLanguages,
+  frameworks,
+  runtimes,
+  packageManagers,
+} from "./catalog";
 import { objects as storageObjects } from "./storage";
 
 export const registrySchema = pgSchema("registry");
@@ -47,7 +70,7 @@ export const namespaces = registrySchema.table(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     slug: text("slug").notNull(),
-    type: namespaceTypeEnum("type").notNull(),
+    namespaceType: namespaceTypeEnum("namespace_type").notNull(),
     ownerAccountId: uuid("owner_account_id").references(() => accounts.id, {
       onDelete: "cascade",
     }),
@@ -70,6 +93,7 @@ export const packages = registrySchema.table(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     namespaceId: uuid("namespace_id")
+      .default(sql`NULL`)
       .notNull()
       .references(() => namespaces.id, { onDelete: "restrict" }),
     namespaceSlug: text("namespace_slug").notNull(),
@@ -81,7 +105,8 @@ export const packages = registrySchema.table(
       onDelete: "cascade",
     }),
     name: text("name").notNull(),
-    normalizedName: text("normalized_name").notNull(),
+    normalizedName: text("normalized_name")
+      .generatedAlwaysAs(sql`lower(name)`),
     description: text("description").notNull(),
     visibility: packageVisibilityEnum("visibility").notNull(),
     status: packageStatusEnum("status").notNull().default("active"),
@@ -118,12 +143,12 @@ export const versions = registrySchema.table(
   "versions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    packageId: uuid("package_id")
+    skillId: uuid("package_id")
       .notNull()
       .references(() => packages.id, { onDelete: "cascade" }),
-    releaseNumber: integer("release_number").notNull(),
+    releaseNumber: integer("release_number").notNull().default(0),
     version: text("version").notNull(),
-    major: integer("major").notNull().default(1),
+    major: integer("major").notNull().default(0),
     minor: integer("minor").notNull().default(0),
     patch: integer("patch").notNull().default(0),
     prerelease: text("prerelease"),
@@ -132,9 +157,15 @@ export const versions = registrySchema.table(
       onDelete: "restrict",
     }),
     bundle: jsonb("bundle").$type<Record<string, unknown>>().notNull(),
-    manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull().default({}),
+    manifest: jsonb("manifest")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull(),
-    provenance: jsonb("provenance").$type<Record<string, unknown>>().notNull().default({}),
+    provenance: jsonb("provenance")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     publishedByAccountId: uuid("published_by_account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "restrict" }),
@@ -142,18 +173,25 @@ export const versions = registrySchema.table(
       .notNull()
       .defaultNow(),
     yankedAt: timestamp("yanked_at", { withTimezone: true }),
-    yankedByAccountId: uuid("yanked_by_account_id").references(() => accounts.id, {
-      onDelete: "set null",
-    }),
+    yankedByAccountId: uuid("yanked_by_account_id").references(
+      () => accounts.id,
+      { onDelete: "set null" },
+    ),
     yankReason: text("yank_reason"),
   },
   (table) => [
-    uniqueIndex("versions_package_version_unique").on(table.packageId, table.version),
+    uniqueIndex("versions_package_version_unique").on(
+      table.skillId,
+      table.version,
+    ),
     uniqueIndex("versions_package_release_unique").on(
-      table.packageId,
+      table.skillId,
       table.releaseNumber,
     ),
-    index("versions_package_published_idx").on(table.packageId, table.publishedAt),
+    index("versions_package_published_idx").on(
+      table.skillId,
+      table.publishedAt,
+    ),
   ],
 );
 
@@ -251,40 +289,86 @@ export const packageCapabilities = registrySchema.table(
     capabilityId: uuid("capability_id")
       .notNull()
       .references(() => capabilities.id, { onDelete: "restrict" }),
-    required: integer("required").notNull().default(0),
+    required: boolean("required").notNull().default(false),
     createdAt,
   },
   (table) => [primaryKey({ columns: [table.packageId, table.capabilityId] })],
 );
 
-function compatibilityTable(name: string, reference: { id: typeof programmingLanguages.id }) {
-  return registrySchema.table(
-    name,
-    {
-      packageId: uuid("package_id")
-        .notNull()
-        .references(() => packages.id, { onDelete: "cascade" }),
-      referenceId: uuid("reference_id")
-        .notNull()
-        .references(() => reference.id, { onDelete: "restrict" }),
-      minimumVersion: text("minimum_version"),
-      maximumVersion: text("maximum_version"),
-      compatibility: compatibilityEnum("compatibility").notNull().default("compatible"),
-      createdAt,
-    },
-    (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
-  );
-}
-
-export const packageProgrammingLanguages = compatibilityTable(
+export const packageProgrammingLanguages = registrySchema.table(
   "package_programming_languages",
-  programmingLanguages,
+  {
+    packageId: uuid("package_id")
+      .notNull()
+      .references(() => packages.id, { onDelete: "cascade" }),
+    referenceId: uuid("reference_id")
+      .notNull()
+      .references(() => programmingLanguages.id, { onDelete: "restrict" }),
+    minimumVersion: text("minimum_version"),
+    maximumVersion: text("maximum_version"),
+    compatibility: compatibilityEnum("compatibility")
+      .notNull()
+      .default("compatible"),
+    createdAt,
+  },
+  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
 );
-export const packageFrameworks = compatibilityTable("package_frameworks", frameworks);
-export const packageRuntimes = compatibilityTable("package_runtimes", runtimes);
-export const packageManagersCompatibility = compatibilityTable(
+
+export const packageFrameworks = registrySchema.table(
+  "package_frameworks",
+  {
+    packageId: uuid("package_id")
+      .notNull()
+      .references(() => packages.id, { onDelete: "cascade" }),
+    referenceId: uuid("reference_id")
+      .notNull()
+      .references(() => frameworks.id, { onDelete: "restrict" }),
+    minimumVersion: text("minimum_version"),
+    maximumVersion: text("maximum_version"),
+    compatibility: compatibilityEnum("compatibility")
+      .notNull()
+      .default("compatible"),
+    createdAt,
+  },
+  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
+);
+
+export const packageRuntimes = registrySchema.table(
+  "package_runtimes",
+  {
+    packageId: uuid("package_id")
+      .notNull()
+      .references(() => packages.id, { onDelete: "cascade" }),
+    referenceId: uuid("reference_id")
+      .notNull()
+      .references(() => runtimes.id, { onDelete: "restrict" }),
+    minimumVersion: text("minimum_version"),
+    maximumVersion: text("maximum_version"),
+    compatibility: compatibilityEnum("compatibility")
+      .notNull()
+      .default("compatible"),
+    createdAt,
+  },
+  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
+);
+
+export const packageManagersCompatibility = registrySchema.table(
   "package_managers",
-  packageManagers,
+  {
+    packageId: uuid("package_id")
+      .notNull()
+      .references(() => packages.id, { onDelete: "cascade" }),
+    referenceId: uuid("reference_id")
+      .notNull()
+      .references(() => packageManagers.id, { onDelete: "restrict" }),
+    minimumVersion: text("minimum_version"),
+    maximumVersion: text("maximum_version"),
+    compatibility: compatibilityEnum("compatibility")
+      .notNull()
+      .default("compatible"),
+    createdAt,
+  },
+  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
 );
 
 export const access = registrySchema.table(
@@ -337,5 +421,17 @@ export type PackageClient = typeof packageClients.$inferSelect;
 export type NewPackageClient = typeof packageClients.$inferInsert;
 export type PackageCapability = typeof packageCapabilities.$inferSelect;
 export type NewPackageCapability = typeof packageCapabilities.$inferInsert;
+export type PackageProgrammingLanguage =
+  typeof packageProgrammingLanguages.$inferSelect;
+export type NewPackageProgrammingLanguage =
+  typeof packageProgrammingLanguages.$inferInsert;
+export type PackageFramework = typeof packageFrameworks.$inferSelect;
+export type NewPackageFramework = typeof packageFrameworks.$inferInsert;
+export type PackageRuntime = typeof packageRuntimes.$inferSelect;
+export type NewPackageRuntime = typeof packageRuntimes.$inferInsert;
+export type PackageManagerCompatibility =
+  typeof packageManagersCompatibility.$inferSelect;
+export type NewPackageManagerCompatibility =
+  typeof packageManagersCompatibility.$inferInsert;
 export type PackageAccess = typeof access.$inferSelect;
 export type NewPackageAccess = typeof access.$inferInsert;
