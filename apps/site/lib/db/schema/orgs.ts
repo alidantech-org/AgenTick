@@ -1,4 +1,12 @@
-import { index, pgSchema, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgSchema,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt, updatedAt } from "./common";
 import { accounts } from "./users";
 
@@ -75,7 +83,7 @@ export const invitations = orgsSchema.table(
       .notNull()
       .references(() => organizations.id, { onDelete: "cascade" }),
     email: text("email").notNull(),
-    secretHash: text("secret_hash").notNull(),
+    codeHash: text("code_hash").notNull(),
     role: membershipRoleEnum("role").notNull(),
     status: invitationStatusEnum("status").notNull().default("pending"),
     createdByAccountId: uuid("created_by_account_id")
@@ -91,7 +99,7 @@ export const invitations = orgsSchema.table(
     createdAt,
   },
   (table) => [
-    uniqueIndex("invitations_secret_hash_unique").on(table.secretHash),
+    uniqueIndex("invitations_code_hash_unique").on(table.codeHash),
     index("invitations_email_expiry_idx").on(table.email, table.expiresAt),
     index("invitations_organization_status_idx").on(
       table.organizationId,
