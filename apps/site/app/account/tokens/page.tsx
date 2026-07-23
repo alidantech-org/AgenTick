@@ -1,3 +1,4 @@
+import "./tokens.css";
 import type { Metadata } from "next";
 import { TokenManager } from "@/components/token-manager";
 import { listApiTokens } from "@/lib/account/service";
