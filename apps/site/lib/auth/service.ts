@@ -129,7 +129,7 @@ export async function verifyLoginOtp(
       expires_at: Date;
     }>(sql`
       SELECT id, otp_hash, attempts, expires_at
-      FROM login_otps
+      FROM auth.challenges
       WHERE email = ${email}
         AND purpose = 'sign-in'
         AND consumed_at IS NULL
