@@ -1,0 +1,46 @@
+name: Rust
+
+on:
+  push:
+    branches: [chatgpt/develop, main]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/**"
+      - ".github/workflows/rust.yml"
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "crates/**"
+      - ".github/workflows/rust.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install pinned Rust toolchain
+        run: rustup show
+      - name: Enforce focused Rust files
+        run: |
+          violations=$(find crates -name '*.rs' -print0 | xargs -0 -r wc -l | awk '$1 > 150 && $2 != "total" {print}')
+          if [ -n "$violations" ]; then
+            echo "Rust files must remain at or below 150 lines:"
+            echo "$violations"
+            exit 1
+          fi
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --workspace
+      - name: Release build
+        run: cargo build --workspace --release
