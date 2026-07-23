@@ -23,22 +23,14 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ email }),
     });
-    const data = (await response.json()) as {
-      ok?: boolean;
-      error?: string;
-      debugOtp?: string;
-    };
+    const data = (await response.json()) as { ok?: boolean; error?: string };
     setBusy(false);
     if (!response.ok) {
       setError(data.error ?? "Unable to send code");
       return;
     }
     setStep("otp");
-    setNotice(
-      data.debugOtp
-        ? `Development code: ${data.debugOtp}`
-        : `We sent an 8-digit code to ${email.trim().toLowerCase()}.`,
-    );
+    setNotice(`We sent an 8-digit code to ${email.trim().toLowerCase()}.`);
   }
 
   async function verifyCode(event: React.FormEvent<HTMLFormElement>) {
