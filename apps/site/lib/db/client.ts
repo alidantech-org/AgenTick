@@ -1,71 +1,56 @@
 import "server-only";
-import {
-  createClient,
-  type Client,
-  type InStatement,
-  type InValue,
-} from "@libsql/client";
-import { SCHEMA_STATEMENTS, SCHEMA_VERSION } from "./schema";
 
-let client: Client | undefined;
-let schemaReady: Promise<void> | undefined;
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
 
-export function createDatabaseClient(): Client {
-  if (client) return client;
-  const url = process.env.DATABASE_URL ?? "file:skillib.db";
-  const authToken = process.env.DATABASE_AUTH_TOKEN;
-  client = createClient({ url, ...(authToken ? { authToken } : {}) });
-  return client;
+type Database = ReturnType<typeof drizzle<typeof schema>>;
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __skillibPostgresClient: ReturnType<typeof postgres> | undefined;
+  // eslint-disable-next-line no-var
+  var __skillibDatabase: Database | undefined;
 }
 
-export async function ensureDatabase(): Promise<Client> {
-  const database = createDatabaseClient();
-  schemaReady ??= (async () => {
-    await database.execute("PRAGMA foreign_keys = ON");
-    await database.execute(
-      `CREATE TABLE IF NOT EXISTS schema_migrations (
-        version INTEGER PRIMARY KEY,
-        applied_at TEXT NOT NULL
-      ) STRICT`,
-    );
-    const applied = await database.execute({
-      sql: "SELECT 1 FROM schema_migrations WHERE version = ? LIMIT 1",
-      args: [SCHEMA_VERSION],
-    });
-    if (!applied.rows[0]) {
-      await database.batch(
-        [
-          ...SCHEMA_STATEMENTS.map((sql) => ({ sql })),
-          {
-            sql: "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
-            args: [SCHEMA_VERSION, new Date().toISOString()],
-          },
-        ],
-        "write",
-      );
-    }
-  })();
-  await schemaReady;
-  return database;
+function databaseUrl(): string {
+  const value = process.env.DATABASE_URL?.trim();
+  if (!value) {
+    throw new Error("DATABASE_URL is required and must point to PostgreSQL");
+  }
+  if (!/^postgres(?:ql)?:\/\//i.test(value)) {
+    throw new Error("DATABASE_URL must use the postgresql:// protocol");
+  }
+  return value;
 }
 
-export async function execute(sql: string, args: InValue[] = []) {
-  const database = await ensureDatabase();
-  return database.execute({ sql, args });
+function createClient() {
+  return postgres(databaseUrl(), {
+    max: Number(process.env.DATABASE_POOL_MAX ?? 10),
+    idle_timeout: 20,
+    connect_timeout: 10,
+    prepare: process.env.DATABASE_PREPARE_STATEMENTS !== "false",
+    ssl:
+      process.env.DATABASE_SSL === "false"
+        ? false
+        : process.env.NODE_ENV === "production"
+          ? "require"
+          : undefined,
+  });
 }
 
-export async function executeBatch(
-  statements: InStatement[],
-  mode: "write" | "read" | "deferred" = "write",
-) {
-  const database = await ensureDatabase();
-  return database.batch(statements, mode);
+export function database(): Database {
+  if (globalThis.__skillibDatabase) return globalThis.__skillibDatabase;
+
+  const client = globalThis.__skillibPostgresClient ?? createClient();
+  const db = drizzle(client, { schema });
+
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.__skillibPostgresClient = client;
+    globalThis.__skillibDatabase = db;
+  }
+
+  return db;
 }
 
-export function stringValue(value: unknown): string | null {
-  return typeof value === "string" ? value : null;
-}
-
-export function numberValue(value: unknown): number {
-  return typeof value === "number" ? value : Number(value ?? 0);
-}
+export type SkillibDatabase = Database;
