@@ -34,10 +34,15 @@ pub struct PublishRequest {
     pub package: String,
     pub source: String,
     pub extension: String,
+    pub language_version: String,
     pub ir: serde_json::Value,
     pub source_hash: String,
     pub ir_hash: String,
     pub compiler_version: String,
+    pub dependencies: Vec<String>,
+    pub permissions: Vec<String>,
+    pub archive_base64: String,
+    pub integrity: String,
     pub visibility: String,
 }
 
