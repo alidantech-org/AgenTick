@@ -1,12 +1,10 @@
 import {
   bigint,
-  boolean,
   index,
   integer,
   jsonb,
   pgSchema,
   primaryKey,
-  sql,
   text,
   timestamp,
   uniqueIndex,
@@ -16,15 +14,15 @@ import { createdAt, updatedAt } from "./common";
 import { accounts } from "./users";
 import { organizations, teams } from "./orgs";
 import {
-  categories,
-  tags as catalogTags,
-  aiModels,
   agentClients,
+  aiModels,
   capabilities,
-  programmingLanguages,
+  categories,
   frameworks,
-  runtimes,
   packageManagers,
+  programmingLanguages,
+  runtimes,
+  tags as catalogTags,
 } from "./catalog";
 import { objects as storageObjects } from "./storage";
 
@@ -93,7 +91,6 @@ export const packages = registrySchema.table(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     namespaceId: uuid("namespace_id")
-      .default(sql`NULL`)
       .notNull()
       .references(() => namespaces.id, { onDelete: "restrict" }),
     namespaceSlug: text("namespace_slug").notNull(),
@@ -105,8 +102,7 @@ export const packages = registrySchema.table(
       onDelete: "cascade",
     }),
     name: text("name").notNull(),
-    normalizedName: text("normalized_name")
-      .generatedAlwaysAs(sql`lower(name)`),
+    normalizedName: text("normalized_name").notNull(),
     description: text("description").notNull(),
     visibility: packageVisibilityEnum("visibility").notNull(),
     status: packageStatusEnum("status").notNull().default("active"),
@@ -146,9 +142,9 @@ export const versions = registrySchema.table(
     skillId: uuid("package_id")
       .notNull()
       .references(() => packages.id, { onDelete: "cascade" }),
-    releaseNumber: integer("release_number").notNull().default(0),
+    releaseNumber: integer("release_number").notNull(),
     version: text("version").notNull(),
-    major: integer("major").notNull().default(0),
+    major: integer("major").notNull().default(1),
     minor: integer("minor").notNull().default(0),
     patch: integer("patch").notNull().default(0),
     prerelease: text("prerelease"),
@@ -157,10 +153,7 @@ export const versions = registrySchema.table(
       onDelete: "restrict",
     }),
     bundle: jsonb("bundle").$type<Record<string, unknown>>().notNull(),
-    manifest: jsonb("manifest")
-      .$type<Record<string, unknown>>()
-      .notNull()
-      .default({}),
+    manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull().default({}),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull(),
     provenance: jsonb("provenance")
       .$type<Record<string, unknown>>()
@@ -173,10 +166,9 @@ export const versions = registrySchema.table(
       .notNull()
       .defaultNow(),
     yankedAt: timestamp("yanked_at", { withTimezone: true }),
-    yankedByAccountId: uuid("yanked_by_account_id").references(
-      () => accounts.id,
-      { onDelete: "set null" },
-    ),
+    yankedByAccountId: uuid("yanked_by_account_id").references(() => accounts.id, {
+      onDelete: "set null",
+    }),
     yankReason: text("yank_reason"),
   },
   (table) => [
@@ -289,86 +281,48 @@ export const packageCapabilities = registrySchema.table(
     capabilityId: uuid("capability_id")
       .notNull()
       .references(() => capabilities.id, { onDelete: "restrict" }),
-    required: boolean("required").notNull().default(false),
+    required: integer("required").notNull().default(0),
     createdAt,
   },
   (table) => [primaryKey({ columns: [table.packageId, table.capabilityId] })],
 );
 
-export const packageProgrammingLanguages = registrySchema.table(
+function compatibilityTable(
+  name: string,
+  reference: { id: typeof programmingLanguages.id },
+) {
+  return registrySchema.table(
+    name,
+    {
+      packageId: uuid("package_id")
+        .notNull()
+        .references(() => packages.id, { onDelete: "cascade" }),
+      referenceId: uuid("reference_id")
+        .notNull()
+        .references(() => reference.id, { onDelete: "restrict" }),
+      minimumVersion: text("minimum_version"),
+      maximumVersion: text("maximum_version"),
+      compatibility: compatibilityEnum("compatibility")
+        .notNull()
+        .default("compatible"),
+      createdAt,
+    },
+    (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
+  );
+}
+
+export const packageProgrammingLanguages = compatibilityTable(
   "package_programming_languages",
-  {
-    packageId: uuid("package_id")
-      .notNull()
-      .references(() => packages.id, { onDelete: "cascade" }),
-    referenceId: uuid("reference_id")
-      .notNull()
-      .references(() => programmingLanguages.id, { onDelete: "restrict" }),
-    minimumVersion: text("minimum_version"),
-    maximumVersion: text("maximum_version"),
-    compatibility: compatibilityEnum("compatibility")
-      .notNull()
-      .default("compatible"),
-    createdAt,
-  },
-  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
+  programmingLanguages,
 );
-
-export const packageFrameworks = registrySchema.table(
+export const packageFrameworks = compatibilityTable(
   "package_frameworks",
-  {
-    packageId: uuid("package_id")
-      .notNull()
-      .references(() => packages.id, { onDelete: "cascade" }),
-    referenceId: uuid("reference_id")
-      .notNull()
-      .references(() => frameworks.id, { onDelete: "restrict" }),
-    minimumVersion: text("minimum_version"),
-    maximumVersion: text("maximum_version"),
-    compatibility: compatibilityEnum("compatibility")
-      .notNull()
-      .default("compatible"),
-    createdAt,
-  },
-  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
+  frameworks,
 );
-
-export const packageRuntimes = registrySchema.table(
-  "package_runtimes",
-  {
-    packageId: uuid("package_id")
-      .notNull()
-      .references(() => packages.id, { onDelete: "cascade" }),
-    referenceId: uuid("reference_id")
-      .notNull()
-      .references(() => runtimes.id, { onDelete: "restrict" }),
-    minimumVersion: text("minimum_version"),
-    maximumVersion: text("maximum_version"),
-    compatibility: compatibilityEnum("compatibility")
-      .notNull()
-      .default("compatible"),
-    createdAt,
-  },
-  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
-);
-
-export const packageManagersCompatibility = registrySchema.table(
+export const packageRuntimes = compatibilityTable("package_runtimes", runtimes);
+export const packageManagersCompatibility = compatibilityTable(
   "package_managers",
-  {
-    packageId: uuid("package_id")
-      .notNull()
-      .references(() => packages.id, { onDelete: "cascade" }),
-    referenceId: uuid("reference_id")
-      .notNull()
-      .references(() => packageManagers.id, { onDelete: "restrict" }),
-    minimumVersion: text("minimum_version"),
-    maximumVersion: text("maximum_version"),
-    compatibility: compatibilityEnum("compatibility")
-      .notNull()
-      .default("compatible"),
-    createdAt,
-  },
-  (table) => [primaryKey({ columns: [table.packageId, table.referenceId] })],
+  packageManagers,
 );
 
 export const access = registrySchema.table(
@@ -421,17 +375,5 @@ export type PackageClient = typeof packageClients.$inferSelect;
 export type NewPackageClient = typeof packageClients.$inferInsert;
 export type PackageCapability = typeof packageCapabilities.$inferSelect;
 export type NewPackageCapability = typeof packageCapabilities.$inferInsert;
-export type PackageProgrammingLanguage =
-  typeof packageProgrammingLanguages.$inferSelect;
-export type NewPackageProgrammingLanguage =
-  typeof packageProgrammingLanguages.$inferInsert;
-export type PackageFramework = typeof packageFrameworks.$inferSelect;
-export type NewPackageFramework = typeof packageFrameworks.$inferInsert;
-export type PackageRuntime = typeof packageRuntimes.$inferSelect;
-export type NewPackageRuntime = typeof packageRuntimes.$inferInsert;
-export type PackageManagerCompatibility =
-  typeof packageManagersCompatibility.$inferSelect;
-export type NewPackageManagerCompatibility =
-  typeof packageManagersCompatibility.$inferInsert;
 export type PackageAccess = typeof access.$inferSelect;
 export type NewPackageAccess = typeof access.$inferInsert;
