@@ -32,10 +32,15 @@ Plan: `agents/work/REGISTRY_UPGRADE_PLAN.md`
 
 ## Site features
 
+- [ ] Establish one modern npm-inspired application shell and semantic design system across public, account, organization, and admin routes.
 - [ ] Upgrade personal package dashboard and package management UI.
 - [ ] Upgrade organization registry dashboard, teams, and access grants.
-- [ ] Upgrade public registry discovery, filters, package pages, and release pages.
-- [ ] Upgrade user profile, emails, sessions, and API token management.
+- [ ] Upgrade public registry discovery with search, keyword facets, tags, categories, AI models, agent clients, languages, frameworks, runtimes, package managers, licenses, sort, and pagination.
+- [ ] Upgrade public package pages with releases, tags, provenance, compatibility, files, integrity, analytics, publisher details, and install commands.
+- [ ] Upgrade user profile with editable identity, verified emails, country, timezone, locale, and account lifecycle controls.
+- [ ] Add active-session management with current-device detection, individual revocation, and revoke-all-other-sessions.
+- [ ] Upgrade API token management with granular scopes, resource restrictions, expiry, last-used details, and revocation.
+- [ ] Add route-level loading, empty, not-found, and error states for all data-backed application routes.
 - [ ] Add admin, catalog management, moderation, events, and audit pages.
 
 ## Reliability and security
