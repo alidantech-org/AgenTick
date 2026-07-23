@@ -46,6 +46,7 @@ export interface SkillDetail extends SkillSummary {
   readme: string | null;
   versions: Array<{
     id: string;
+    releaseNumber: number;
     version: string;
     integrity: string;
     publishedAt: string;
@@ -82,7 +83,7 @@ export async function searchPublicSkills(
   const query = input.query?.trim() ?? "";
   const limit = Math.min(Math.max(input.limit ?? 24, 1), 100);
   const pattern = `%${query}%`;
-  const filters = [eq(skills.visibility, "public")];
+  const filters = [eq(skills.visibility, "public"), eq(skills.status, "active")];
 
   if (query) {
     filters.push(
@@ -163,10 +164,7 @@ export async function listOrganizationSkills(
     .where(eq(skills.organizationId, organization.id))
     .orderBy(desc(skills.updatedAt));
 
-  return {
-    organization,
-    skills: skillRows.map(summaryFromRow),
-  };
+  return { organization, skills: skillRows.map(summaryFromRow) };
 }
 
 export async function listOrganizations(accountId: string) {
@@ -180,10 +178,10 @@ export async function listOrganizations(accountId: string) {
     skill_count: number;
   }>(sql`
     SELECT o.id, o.name, o.slug, o.description, m.role,
-      (SELECT count(*)::int FROM organization_members mm WHERE mm.organization_id = o.id) AS member_count,
-      (SELECT count(*)::int FROM skills s WHERE s.organization_id = o.id) AS skill_count
-    FROM organizations o
-    JOIN organization_members m ON m.organization_id = o.id
+      (SELECT count(*)::int FROM orgs.memberships mm WHERE mm.organization_id = o.id) AS member_count,
+      (SELECT count(*)::int FROM registry.packages p WHERE p.organization_id = o.id) AS skill_count
+    FROM orgs.organizations o
+    JOIN orgs.memberships m ON m.organization_id = o.id
     WHERE m.account_id = ${accountId}::uuid
     ORDER BY o.name
   `);
@@ -238,7 +236,7 @@ async function findSkill(identifier: string): Promise<SkillRow | undefined> {
         .where(
           and(
             eq(skills.namespaceSlug, segments[0]!),
-            eq(skills.name, segments[1]!),
+            eq(skills.normalizedName, segments[1]!.toLowerCase()),
           ),
         )
         .limit(1)
@@ -251,8 +249,9 @@ async function findSkill(identifier: string): Promise<SkillRow | undefined> {
       .from(skills)
       .where(
         and(
-          eq(skills.name, segments[0] ?? ""),
+          eq(skills.normalizedName, (segments[0] ?? "").toLowerCase()),
           eq(skills.visibility, "public"),
+          eq(skills.status, "active"),
         ),
       )
       .orderBy(
@@ -277,15 +276,15 @@ export async function getSkillDetail(
     .where(
       and(eq(skillVersions.skillId, skill.id), isNull(skillVersions.yankedAt)),
     )
-    .orderBy(desc(skillVersions.publishedAt));
+    .orderBy(desc(skillVersions.releaseNumber));
 
   const bundles = versions.map((version) => ({
     ...version,
     bundle: validateSkillBundle(version.bundle),
   }));
   const latestBundle =
-    bundles.find((version) => version.version === skill.latestVersion)
-      ?.bundle ?? bundles[0]?.bundle;
+    bundles.find((version) => version.version === skill.latestVersion)?.bundle ??
+    bundles[0]?.bundle;
   const skillMarkdown = latestBundle?.files.find(
     (file) => file.path === "SKILL.md",
   );
@@ -302,6 +301,7 @@ export async function getSkillDetail(
       : null,
     versions: versions.map((version) => ({
       id: version.id,
+      releaseNumber: version.releaseNumber,
       version: version.version,
       integrity: version.integrity,
       publishedAt: version.publishedAt.toISOString(),
@@ -310,13 +310,20 @@ export async function getSkillDetail(
   };
 }
 
+interface NamespacePermission {
+  namespaceId: string;
+  type: "user" | "organization";
+  organizationId: string | null;
+}
+
 async function namespacePermission(
   principal: Principal,
   namespace: string,
   tx: Transaction,
-): Promise<{ type: "user" | "organization"; organizationId: string | null }> {
+): Promise<NamespacePermission> {
   const rows = await tx
     .select({
+      namespaceId: registryNamespaces.id,
       namespaceType: registryNamespaces.namespaceType,
       ownerAccountId: registryNamespaces.ownerAccountId,
       organizationId: registryNamespaces.organizationId,
@@ -342,12 +349,20 @@ async function namespacePermission(
     if (row.ownerAccountId !== principal.id) {
       throw new Error(`You cannot publish in the ${namespace} namespace`);
     }
-    return { type: "user", organizationId: null };
+    return {
+      namespaceId: row.namespaceId,
+      type: "user",
+      organizationId: null,
+    };
   }
   if (!row.role || !["owner", "admin", "publisher"].includes(row.role)) {
     throw new Error(`You cannot publish in the ${namespace} namespace`);
   }
-  return { type: "organization", organizationId: row.organizationId };
+  return {
+    namespaceId: row.namespaceId,
+    type: "organization",
+    organizationId: row.organizationId,
+  };
 }
 
 function bundleKeywords(bundle: SkillBundle): string[] {
@@ -359,12 +374,34 @@ function bundleKeywords(bundle: SkillBundle): string[] {
     : [];
 }
 
+function versionParts(version: string): {
+  major: number;
+  minor: number;
+  patch: number;
+  prerelease: string | null;
+} {
+  const match = version.replace(/^v/, "").match(/^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
+  if (!match) throw new Error(`Invalid semantic version: ${version}`);
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    prerelease: match[4] ?? null,
+  };
+}
+
 export async function publishSkill(input: {
   principal: Principal;
   bundle: unknown;
   integrity?: string;
   visibility?: SkillVisibility;
-}): Promise<{ id: string; version: string; integrity: string }> {
+}): Promise<{
+  id: string;
+  releaseId: string;
+  releaseNumber: number;
+  version: string;
+  integrity: string;
+}> {
   if (!hasScope(input.principal, "skills:write")) {
     throw new Error("Token lacks skills:write scope");
   }
@@ -376,9 +413,13 @@ export async function publishSkill(input: {
   }
   const [namespace, name] = bundle.id.split("/");
   if (!namespace || !name) throw new Error("Skill id must use namespace/name");
+  const normalizedName = name.toLowerCase();
+  const semver = versionParts(bundle.version);
+
+  let result: { releaseId: string; releaseNumber: number } | undefined;
 
   try {
-    await database().transaction(async (tx) => {
+    result = await database().transaction(async (tx) => {
       const permission = await namespacePermission(
         input.principal,
         namespace,
@@ -387,7 +428,12 @@ export async function publishSkill(input: {
       const existing = await tx
         .select()
         .from(skills)
-        .where(and(eq(skills.namespaceSlug, namespace), eq(skills.name, name)))
+        .where(
+          and(
+            eq(skills.namespaceId, permission.namespaceId),
+            eq(skills.normalizedName, normalizedName),
+          ),
+        )
         .limit(1);
 
       const current = existing[0];
@@ -398,11 +444,13 @@ export async function publishSkill(input: {
         const [created] = await tx
           .insert(skills)
           .values({
+            namespaceId: permission.namespaceId,
             namespaceSlug: namespace,
             namespaceType: permission.type,
             ownerAccountId: input.principal.id,
             organizationId: permission.organizationId,
             name,
+            normalizedName,
             description: bundle.metadata.description,
             visibility,
             license: bundle.metadata.license ?? null,
@@ -410,10 +458,16 @@ export async function publishSkill(input: {
             latestVersion: bundle.version,
           })
           .returning({ id: skills.id });
-        if (!created) throw new Error("Unable to create skill");
+        if (!created) throw new Error("Unable to create skill package");
         skillId = created.id;
       } else {
         skillId = current.id;
+        await tx.execute(sql`
+          SELECT id FROM registry.packages
+          WHERE id = ${skillId}::uuid
+          FOR UPDATE
+        `);
+
         const duplicate = await tx
           .select({ id: skillVersions.id })
           .from(skillVersions)
@@ -447,26 +501,39 @@ export async function publishSkill(input: {
           .where(eq(skills.id, skillId));
       }
 
-      const [version] = await tx
+      const releaseRows = await tx
+        .select({
+          nextRelease: sql<number>`coalesce(max(${skillVersions.releaseNumber}), 0) + 1`,
+        })
+        .from(skillVersions)
+        .where(eq(skillVersions.skillId, skillId));
+      const releaseNumber = Number(releaseRows[0]?.nextRelease ?? 1);
+
+      const [release] = await tx
         .insert(skillVersions)
         .values({
           skillId,
+          releaseNumber,
           version: bundle.version,
+          ...semver,
           integrity,
           bundle,
+          manifest: bundle.metadata,
           metadata: bundle.metadata,
           publishedByAccountId: input.principal.id,
         })
         .returning({ id: skillVersions.id });
-      if (!version) throw new Error("Unable to publish skill version");
+      if (!release) throw new Error("Unable to publish skill release");
 
       await tx.insert(skillEvents).values({
-        skillId,
-        versionId: version.id,
+        packageId: skillId,
+        versionId: release.id,
         accountId: input.principal.id,
         eventType: "publish",
         eventDay: new Date().toISOString().slice(0, 10),
       });
+
+      return { releaseId: release.id, releaseNumber };
     });
   } catch (error) {
     if (error instanceof Error && /duplicate|unique/i.test(error.message)) {
@@ -477,7 +544,14 @@ export async function publishSkill(input: {
     throw error;
   }
 
-  return { id: bundle.id, version: bundle.version, integrity };
+  if (!result) throw new Error("Publishing did not return a release");
+  return {
+    id: bundle.id,
+    releaseId: result.releaseId,
+    releaseNumber: result.releaseNumber,
+    version: bundle.version,
+    integrity,
+  };
 }
 
 export async function resolveSkill(input: {
@@ -488,6 +562,7 @@ export async function resolveSkill(input: {
 }): Promise<{
   skill: SkillSummary;
   versionId: string;
+  releaseNumber: number;
   bundle: SkillBundle;
   integrity: string;
 } | null> {
@@ -498,23 +573,25 @@ export async function resolveSkill(input: {
       .where(
         and(
           eq(skills.namespaceSlug, input.namespace),
-          eq(skills.name, input.name),
+          eq(skills.normalizedName, input.name.toLowerCase()),
         ),
       )
       .limit(1)
   )[0];
   if (!row || !(await canReadRow(row, input.principal))) return null;
 
-  const versions = await database()
+  const releases = await database()
     .select()
     .from(skillVersions)
     .where(
       and(eq(skillVersions.skillId, row.id), isNull(skillVersions.yankedAt)),
     )
-    .orderBy(desc(skillVersions.publishedAt));
-  const selected = versions
-    .filter((version) =>
-      versionMatches(version.version, input.requestedVersion),
+    .orderBy(desc(skillVersions.releaseNumber));
+  const selected = releases
+    .filter(
+      (release) =>
+        String(release.releaseNumber) === input.requestedVersion ||
+        versionMatches(release.version, input.requestedVersion),
     )
     .sort((left, right) => compareVersions(right.version, left.version))[0];
   if (!selected) return null;
@@ -522,6 +599,7 @@ export async function resolveSkill(input: {
   return {
     skill: summaryFromRow(row),
     versionId: selected.id,
+    releaseNumber: selected.releaseNumber,
     bundle: validateSkillBundle(selected.bundle),
     integrity: selected.integrity,
   };
@@ -551,7 +629,7 @@ export async function recordSkillMetric(input: {
     const inserted = await tx
       .insert(skillEvents)
       .values({
-        skillId: input.skillId,
+        packageId: input.skillId,
         versionId: input.versionId ?? null,
         accountId: input.principal?.id ?? null,
         eventType: input.eventType,
