@@ -1,7 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SyntaxHighlight } from "@/components/syntax-highlight";
 
 export const metadata: Metadata = { title: "Product guides" };
+
+const quickstart = `pnpm dlx skillib init
+skillib watch
+skillib verify
+
+# authenticate with a token created in /account
+skillib login
+skillib pull
+skillib skill add johnte/backend-review@2.3.1
+skillib push agents/skills/my-skill --id your-handle/my-skill --version 1.0.0 --visibility private`;
 
 export default function GuidesPage() {
   return (
@@ -75,14 +86,11 @@ export default function GuidesPage() {
           <section id="cli">
             <span>05</span>
             <h2>CLI quickstart</h2>
-            <pre className="guide-code">
-              pnpm dlx skillib init{`\n`}skillib watch{`\n`}skillib verify
-              {`\n\n`}# authenticate with a token created in /account{`\n`}
-              skillib login{`\n`}skillib pull{`\n`}skillib skill add
-              johnte/backend-review@2.3.1{`\n`}skillib push
-              agents/skills/my-skill --id your-handle/my-skill --version 1.0.0
-              --visibility private
-            </pre>
+            <SyntaxHighlight
+              code={quickstart}
+              language="shell"
+              className="mt-6"
+            />
           </section>
         </div>
       </div>

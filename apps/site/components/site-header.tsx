@@ -9,8 +9,8 @@ import { RegistrySearch } from "./registry-search";
 export async function SiteHeader() {
   const account = await optionalAccount();
   return (
-    <header className="site-header">
-      <div className="header-inner">
+    <header className="site-header w-full border-b border-border/50 bg-background max-w-none">
+      <div className="header-inner max-w-none flex items-center justify-between gap-4 px-4 py-3 md:px-8">
         <Wordmark compact />
         <nav className="main-nav hidden md:flex" aria-label="Main navigation">
           <Link href="/skills">Skills</Link>
@@ -20,6 +20,8 @@ export async function SiteHeader() {
           <RegistrySearch compact />
         </div>
         <div className="header-actions">
+          {" "}
+          <ThemeToggle />
           <Button
             asChild
             variant="ghost"
@@ -32,7 +34,7 @@ export async function SiteHeader() {
               rel="noreferrer"
               aria-label="Skillib on GitHub"
             >
-              <Github className="size-4" />
+              <Github className="size-6" />
             </a>
           </Button>
           <Button
@@ -42,24 +44,15 @@ export async function SiteHeader() {
             className="hidden sm:inline-flex"
           >
             <Link href="/guides#cli" aria-label="CLI quickstart">
-              <TerminalSquare className="size-4" />
+              <TerminalSquare className="size-6" />
             </Link>
           </Button>
-          <ThemeToggle />
           {account ? (
             <Button asChild size="sm">
               <Link href="/account">@{account.handle}</Link>
             </Button>
           ) : (
             <>
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="hidden sm:inline-flex"
-              >
-                <Link href="/login">Log in</Link>
-              </Button>
               <Button asChild size="sm">
                 <Link href="/signup">Get started</Link>
               </Button>

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SyntaxHighlight } from "@/components/syntax-highlight";
 
 interface Block {
   type: "heading" | "paragraph" | "list" | "code" | "quote";
@@ -88,11 +89,11 @@ function inlineText(value: string): ReactNode[] {
   });
 }
 
-export function SkillReadme({ source }: { source: string }) {
+export async function SkillReadme({ source }: { source: string }) {
   const blocks = blocksFromMarkdown(source);
   return (
     <div className="skill-readme-content">
-      {blocks.map((block, index) => {
+      {await Promise.all(blocks.map(async (block, index) => {
         if (block.type === "heading") {
           const content = inlineText(block.lines[0] ?? "");
           if (block.level === 1) return <h2 key={index}>{content}</h2>;
@@ -110,9 +111,11 @@ export function SkillReadme({ source }: { source: string }) {
         }
         if (block.type === "code") {
           return (
-            <pre key={index} data-language={block.language || undefined}>
-              <code>{block.lines.join("\n")}</code>
-            </pre>
+            <SyntaxHighlight
+              key={index}
+              code={block.lines.join("\n")}
+              language={block.language || "text"}
+            />
           );
         }
         if (block.type === "quote") {
@@ -125,7 +128,7 @@ export function SkillReadme({ source }: { source: string }) {
           );
         }
         return <p key={index}>{inlineText(block.lines.join(" "))}</p>;
-      })}
+      }))}
     </div>
   );
 }

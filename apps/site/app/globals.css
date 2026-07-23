@@ -16,13 +16,17 @@
   --secondary-foreground: oklch(0.2 0.004 90);
   --muted: oklch(0.94 0.004 90);
   --muted-foreground: oklch(0.48 0.008 90);
-  --accent: oklch(0.91 0.006 90);
-  --accent-foreground: oklch(0.16 0.004 90);
+  --accent: oklch(0.62 0.14 55);
+  --accent-foreground: oklch(0.985 0.002 90);
+  --accent-muted: oklch(0.62 0.14 55 / 12%);
   --destructive: oklch(0.58 0.21 27);
   --destructive-foreground: oklch(0.985 0.002 90);
   --border: oklch(0.84 0.006 90);
   --input: oklch(0.84 0.006 90);
   --ring: oklch(0.35 0.006 90);
+  --ink: oklch(0.16 0.004 90);
+  --ink-foreground: oklch(0.985 0.002 90);
+  --surface: oklch(0.97 0.002 90);
   --radius: 0.75rem;
 }
 
@@ -39,13 +43,17 @@
   --secondary-foreground: oklch(0.94 0.003 90);
   --muted: oklch(0.22 0.005 90);
   --muted-foreground: oklch(0.68 0.006 90);
-  --accent: oklch(0.27 0.006 90);
-  --accent-foreground: oklch(0.94 0.003 90);
+  --accent: oklch(0.68 0.15 55);
+  --accent-foreground: oklch(0.15 0.004 90);
+  --accent-muted: oklch(0.68 0.15 55 / 16%);
   --destructive: oklch(0.68 0.19 27);
   --destructive-foreground: oklch(0.13 0.004 90);
   --border: oklch(0.31 0.006 90);
   --input: oklch(0.31 0.006 90);
   --ring: oklch(0.72 0.006 90);
+  --ink: oklch(0.16 0.004 90);
+  --ink-foreground: oklch(0.985 0.002 90);
+  --surface: oklch(0.155 0.004 90);
 }
 
 @theme inline {
@@ -63,11 +71,15 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-muted: var(--accent-muted);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-surface: var(--surface);
   --font-sans: var(--font-inter);
   --font-display: var(--font-inter-tight);
   --font-mono: var(--font-jetbrains-mono);
@@ -81,233 +93,346 @@
   * {
     @apply border-border;
   }
+
   html {
     @apply scroll-smooth;
   }
+
   body {
     @apply min-h-screen bg-background font-sans text-foreground antialiased;
   }
+
   a {
     @apply transition-colors;
   }
+
   button,
   input,
   textarea,
   select {
     font: inherit;
   }
+
   code,
   pre {
     @apply font-mono;
   }
+
+  /* FIX 4 — was bg-primary/20, which collapses to near-zero contrast in dark
+     mode (primary and foreground are both near-white there). Solid fill keeps
+     selected text legible in both themes. */
   ::selection {
     @apply bg-primary text-primary-foreground;
   }
 }
 
 @layer components {
+
   .page-shell,
   .header-inner,
   .footer-grid,
   .footer-bottom {
-    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
   }
+
   .standard-page {
-    @apply min-h-[70vh] py-16 sm:py-24;
+    @apply relative isolate min-h-[70vh] overflow-hidden py-16 sm:py-24;
   }
+
+  /* FIX 5 — the grid-texture ::before was removed from .standard-page.
+     It was leaking onto every internal page (guides, account, auth,
+     dashboards) since they all share this layout class. It's now its own
+     opt-in class below — apply it explicitly only where you want the
+     texture (e.g. the homepage hero wrapper). */
+
   .narrow-page {
     @apply max-w-2xl;
   }
+
+  /* Opt-in decorative grid texture — was previously baked into every
+     .standard-page via ::before. Add this class explicitly to a single
+     wrapper (e.g. the hero section) instead. Needs the wrapper to be
+     `relative isolate overflow-hidden` (standard-page already provides
+     this, or add it yourself if using elsewhere). */
+  .decorative-grid::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0 -z-10 opacity-60;
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+  }
+
   .section-label {
     @apply font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground;
   }
+
   .page-hero,
   .account-header {
     @apply mb-10 border-b border-border pb-8;
   }
+
   .page-hero h1,
   .account-header h1 {
     @apply mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl;
   }
+
   .page-hero p,
   .account-header p {
     @apply mt-4 max-w-2xl text-muted-foreground;
   }
+
+  /* FIX 3 — was a translucent bg-primary/10 + border-primary/20 tint,
+     visually indistinguishable in weight from .button-secondary. Restored
+     to a solid fill so the primary action actually reads as primary. */
   .button {
-    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
   }
+
   .button-small {
     @apply h-8 px-3 text-xs;
   }
+
   .button-large {
     @apply h-12 px-6 text-base;
   }
+
   .button-secondary,
   .text-button {
-    @apply border border-border bg-background text-foreground hover:bg-muted;
+    @apply border border-border bg-surface text-foreground hover:bg-muted;
   }
+
+  /* FIX 3 (cont.) — for a CTA placed on a dark/inverted section (e.g. the
+     final CTA or package-discipline panel), it should invert light-on-dark,
+     not repeat the same tinted style as .button. */
   .button-dark {
-    @apply bg-primary text-primary-foreground;
+    @apply bg-background text-foreground hover:bg-background/85;
   }
+
   .site-header {
     @apply sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-xl;
   }
+
   .header-inner {
     @apply flex h-14 items-center gap-5;
   }
+
   .wordmark {
     @apply inline-flex shrink-0 items-center gap-2 font-display font-bold tracking-tight;
   }
+
   .logo-mark {
     @apply text-foreground;
   }
+
   .header-search {
     @apply hidden min-w-0 flex-1 md:block;
   }
+
   .main-nav,
   .header-actions {
     @apply flex items-center gap-1;
   }
+
   .main-nav a,
   .header-actions a,
   .text-button {
     @apply rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground;
   }
+
   .header-actions {
     @apply ml-auto;
   }
+
   .site-footer {
     @apply border-t border-border bg-muted/35;
   }
+
   .footer-grid {
     @apply grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4;
   }
-  .footer-grid > div {
+
+  .footer-grid>div {
     @apply flex flex-col items-start gap-2 text-sm text-muted-foreground;
   }
+
   .footer-grid h3 {
     @apply mb-2 font-display font-semibold text-foreground;
   }
+
   .footer-copy {
     @apply mt-4 max-w-xs leading-relaxed;
   }
+
   .footer-bottom {
     @apply flex flex-wrap items-center justify-between gap-4 border-t border-border py-5 font-mono text-xs text-muted-foreground;
   }
+
   .registry-search {
     @apply relative w-full;
   }
+
   .registry-search form {
-    @apply flex items-center gap-3 rounded-xl border border-input bg-background px-4;
+    @apply flex items-center gap-3 rounded-full bg-muted px-4 transition-colors focus-within:bg-background focus-within:ring-1 focus-within:ring-ring;
   }
-  .registry-search form:focus-within {
-    @apply ring-2 ring-ring;
-  }
+
+  /* FIX 2 — the global `input` base rule below still applies
+     `border border-input` to this input since nothing here overrode it.
+     border-none removes that inner border so the pill form is the only
+     visible boundary. */
   .registry-search input {
-    @apply h-12 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground;
+    @apply h-12 min-w-0 flex-1 border-none bg-transparent text-sm outline-none placeholder:text-muted-foreground;
   }
-  .registry-search form button {
-    @apply rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground;
+
+  .registry-search .search-icon {
+    @apply text-muted-foreground;
   }
+
+  .registry-search .clear-button {
+    @apply flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground;
+  }
+
   .registry-search-compact form {
-    @apply rounded-md bg-muted px-3;
-  }
-  .registry-search-compact input {
     @apply h-9;
   }
+
+  /* FIX 2 (cont.) — same border-none needed here for the compact variant. */
+  .registry-search-compact input {
+    @apply h-9 border-none;
+  }
+
+  /* FIX 1 — this used to be duplicated further down the file with an older,
+     bordered-row version that silently won the cascade (same specificity,
+     later source order) and reverted the popover back to the "borders
+     inside borders" look. That duplicate block has been deleted; this is
+     now the only definition. */
   .search-popover {
-    @apply absolute top-[calc(100%+0.5rem)] z-50 w-full overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground;
+    @apply absolute top-[calc(100%+0.5rem)] z-50 w-full overflow-hidden rounded-xl border border-border bg-popover p-1.5 text-popover-foreground;
   }
+
   .search-popover button {
-    @apply grid w-full grid-cols-[1fr_auto] gap-x-4 border-b border-border px-4 py-3 text-left last:border-0 hover:bg-muted;
+    @apply grid w-full grid-cols-[1fr_auto] gap-x-4 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-muted;
   }
-  .search-popover button > span:last-of-type {
+
+  .search-popover button>span:last-of-type {
     @apply col-span-2 truncate text-xs text-muted-foreground;
   }
+
   .search-result-name {
     @apply font-mono text-sm font-semibold;
   }
+
+  .search-all {
+    @apply mt-0.5 grid-cols-1 justify-center text-center font-mono text-xs text-muted-foreground;
+  }
+
   .skill-grid {
     @apply grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2 lg:grid-cols-3;
   }
+
   .skill-card {
     @apply flex min-h-64 flex-col bg-card p-6 text-card-foreground transition-colors hover:bg-muted/40;
   }
+
   .skill-card-topline,
   .skill-card footer,
   .keyword-row {
     @apply flex flex-wrap items-center gap-2;
   }
+
   .skill-card-topline {
     @apply justify-between font-mono text-xs text-muted-foreground;
   }
+
   .visibility-badge,
   .keyword-row span,
   .owner-context {
-    @apply rounded-full border border-border px-2.5 py-1 font-mono text-[11px] text-muted-foreground;
+    @apply rounded-full border border-border bg-surface px-2.5 py-1 font-mono text-[11px] text-muted-foreground;
   }
+
   .visibility-private {
     @apply border-foreground text-foreground;
   }
+
   .skill-card h3 {
     @apply mt-6 font-display text-xl font-bold tracking-tight;
   }
+
   .skill-card h3 span {
     @apply text-muted-foreground;
   }
-  .skill-card > p {
+
+  .skill-card>p {
     @apply mt-3 flex-1 text-sm leading-relaxed text-muted-foreground;
   }
+
   .keyword-row {
     @apply mt-6;
   }
+
   .skill-card footer {
     @apply mt-5 border-t border-border pt-4 font-mono text-[11px] text-muted-foreground;
   }
+
   .registry-toolbar,
   .account-header {
     @apply flex flex-wrap items-center justify-between gap-4;
   }
+
   .registry-toolbar {
     @apply mb-6 border-y border-border py-3 text-sm text-muted-foreground;
   }
+
   .registry-toolbar nav {
     @apply flex gap-1;
   }
+
   .registry-toolbar nav a {
     @apply rounded-full px-3 py-1.5 hover:bg-muted;
   }
+
+  /* FIX 3 (cont.) — was the same washed bg-primary/10 + ring tint;
+     restored to a solid fill so the active tab is unambiguous. */
   .registry-toolbar nav .active {
     @apply bg-primary text-primary-foreground;
   }
+
   .large-empty-state,
   .empty-state,
   .empty-registry-promo {
     @apply rounded-2xl border border-dashed border-border bg-card p-10 text-center;
   }
+
   .large-empty-state h2,
   .empty-state h2,
   .empty-registry-promo h3 {
     @apply font-display text-2xl font-bold;
   }
+
   .large-empty-state p,
   .empty-state p,
   .empty-registry-promo p {
     @apply mx-auto mt-3 max-w-lg text-muted-foreground;
   }
-  .large-empty-state > div,
+
+  .large-empty-state>div,
   .empty-registry-promo {
     @apply mt-6 flex flex-wrap items-center justify-center gap-3;
   }
+
   .account-page {
     @apply max-w-6xl;
   }
+
   .account-nav {
     @apply mb-10 flex flex-wrap gap-1 border-b border-border pb-3;
   }
+
   .account-nav a {
     @apply rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground;
   }
+
   .account-section,
   .dashboard-card,
   .form-card,
@@ -316,83 +441,134 @@
   .organisation-card {
     @apply rounded-2xl border border-border bg-card p-6;
   }
+
   .dashboard-grid,
   .account-grid,
   .organisation-grid,
   .stat-grid {
     @apply grid gap-4 md:grid-cols-2 lg:grid-cols-4;
   }
+
   .dashboard-card strong,
   .stat-card strong {
     @apply mt-2 block font-display text-3xl;
   }
+
   .form-grid,
   .stack-form {
     @apply grid gap-4;
   }
+
   label {
     @apply grid gap-2 text-sm font-medium;
   }
+
   input,
   textarea,
   select {
-    @apply rounded-md border border-input bg-background px-3 py-2 text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring;
+    @apply rounded-md border border-input bg-surface px-3 py-2 text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring;
   }
+
   textarea {
     @apply min-h-28;
   }
+
   .auth-shell {
     @apply mx-auto grid min-h-[70vh] max-w-md place-items-center px-5 py-16;
   }
+
   .auth-card {
     @apply w-full;
   }
+
   .auth-card h1 {
     @apply font-display text-3xl font-bold;
   }
+
   .auth-card p {
     @apply mt-3 text-muted-foreground;
   }
+
   .auth-card form {
     @apply mt-8 grid gap-4;
   }
+
   .status-message,
   .form-message {
     @apply rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground;
   }
+
   .error-message {
     @apply border-destructive text-destructive;
   }
+
   .guide-layout {
     @apply grid gap-10 lg:grid-cols-[14rem_1fr];
   }
+
   .guide-nav {
     @apply flex h-fit flex-col border-l border-border lg:sticky lg:top-24;
   }
+
   .guide-nav a {
     @apply border-l-2 border-transparent px-4 py-2 text-sm text-muted-foreground hover:border-foreground hover:text-foreground;
   }
+
   .guide-content {
     @apply grid gap-12;
   }
+
   .guide-content section {
     @apply scroll-mt-24 border-b border-border pb-10 last:border-0;
   }
-  .guide-content section > span {
+
+  .guide-content section>span {
     @apply font-mono text-xs text-muted-foreground;
   }
+
   .guide-content h2 {
     @apply mt-3 font-display text-2xl font-bold tracking-tight sm:text-3xl;
   }
+
   .guide-content p {
     @apply mt-4 leading-relaxed text-muted-foreground;
   }
+
   .guide-callout,
-  .guide-code,
   .code-window {
     @apply mt-6 overflow-x-auto rounded-xl border border-border bg-muted p-5 font-mono text-sm;
   }
+  .syntax-highlight {
+    @apply relative overflow-hidden rounded-xl border border-border bg-surface text-sm;
+  }
+  .syntax-highlight[data-language]::before {
+    content: attr(data-language);
+    @apply pointer-events-none absolute top-3 right-4 z-10 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground;
+  }
+  .syntax-highlight .shiki {
+    @apply m-0 overflow-x-auto bg-transparent! p-5 font-mono text-xs leading-6;
+  }
+  .dark .syntax-highlight .shiki,
+  .dark .syntax-highlight .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: transparent !important;
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+
   .arrow-link {
     @apply mt-5 inline-flex font-semibold underline decoration-border underline-offset-4 hover:decoration-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
