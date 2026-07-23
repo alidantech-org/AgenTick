@@ -1,0 +1,25 @@
+[package]
+name = "skillib-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "skillib"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+console.workspace = true
+serde_json.workspace = true
+skillib-compiler = { path = "../skillib-compiler" }
+skillib-formatter = { path = "../skillib-formatter" }
+skillib-lsp = { path = "../skillib-lsp" }
+skillib-source = { path = "../skillib-source" }
+skillib-watcher = { path = "../skillib-watcher" }
+tokio.workspace = true
+
+[lints]
+workspace = true
