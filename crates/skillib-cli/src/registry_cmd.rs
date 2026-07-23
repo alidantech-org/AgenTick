@@ -1,5 +1,6 @@
 use crate::{language, ui};
 use anyhow::{Context, Result};
+use base64::{Engine, engine::general_purpose::STANDARD};
 use skillib_compiler::{Compiler, SkillCompiler};
 use skillib_package::{LockedPackage, Lockfile, PackageArchive, PackageCache};
 use skillib_registry::{HttpRegistryClient, PublishRequest, RegistryClient, TokenStore};
@@ -70,15 +71,16 @@ pub async fn publish(root: &Path, file: &Path, package: &str, visibility: &str) 
     let compiled = SkillCompiler.compile(&source);
     anyhow::ensure!(compiled.success, "skill does not compile");
     let ir = compiled.ir.context("compiler returned no IR")?;
-    let extension = file.extension().and_then(|value| value.to_str()).unwrap_or("skillib");
+    let extension = file.extension().and_then(|value| value.to_str()).unwrap_or("skillib").to_owned();
+    let archive = PackageArchive::new(extension.clone(), source.text().to_owned(), ir.clone())?;
+    let bytes = archive.encode()?;
     let request = PublishRequest {
-        package: package.to_owned(),
-        source: source.text().to_owned(),
-        extension: extension.to_owned(),
-        ir: serde_json::to_value(ir)?,
-        source_hash: compiled.source_hash,
-        ir_hash: compiled.ir_hash.context("compiler returned no IR hash")?,
+        package: package.to_owned(), source: source.text().to_owned(), extension,
+        language_version: ir.language_version.clone(), ir: serde_json::to_value(&ir)?,
+        source_hash: archive.source_hash, ir_hash: archive.ir_hash,
         compiler_version: env!("CARGO_PKG_VERSION").to_owned(),
+        dependencies: ir.dependencies.clone(), permissions: ir.permissions.clone(),
+        archive_base64: STANDARD.encode(&bytes), integrity: archive.integrity()?,
         visibility: visibility.to_owned(),
     };
     let result = client()?.publish(&request, &required_token(root)?).await?;
