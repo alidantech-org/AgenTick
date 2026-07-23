@@ -38,7 +38,7 @@ Plan: `agents/work/REGISTRY_UPGRADE_PLAN.md`
 - [ ] Upgrade public registry discovery with search, keyword facets, tags, categories, AI models, agent clients, languages, frameworks, runtimes, package managers, licenses, sort, and pagination.
 - [ ] Upgrade public package pages with releases, tags, provenance, compatibility, files, integrity, analytics, publisher details, and install commands.
 - [ ] Upgrade user profile with editable identity, verified emails, country, timezone, locale, and account lifecycle controls.
-- [ ] Add active-session management with current-device detection, individual revocation, and revoke-all-other-sessions.
+- [x] Add active-session management with current-device detection, individual revocation, and revoke-all-other-sessions.
 - [ ] Upgrade API token management with granular scopes, resource restrictions, expiry, last-used details, and revocation.
 - [ ] Add route-level loading, empty, not-found, and error states for all data-backed application routes.
 - [ ] Add admin, catalog management, moderation, events, and audit pages.
