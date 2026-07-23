@@ -4,8 +4,9 @@ import {
   CircleAlert,
   RefreshCcw,
   Search,
-  Sigma,
-  TextQuote,
+  ShieldCheck,
+  Sparkles,
+  Terminal,
 } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { RegistrySearch } from "@/components/registry-search";
@@ -28,27 +29,32 @@ const values: { icon: React.ComponentType; title: string; copy: string; note?: s
     note: "scope drift detected · blocked before handoff",
   },
   {
-    icon: TextQuote,
-    title: "Stop leaving your best prompts in chat history.",
-    copy: "Package repeatable expertise as Agent Skills, publish immutable versions, and pull them into any project with integrity checks.",
+    icon: Library,
+    title: "Versioned skill registry",
+    copy: "Publish reusable skills under personal or organisation namespaces with immutable versions.",
   },
   {
-    icon: RefreshCcw,
-    title: "Become genuinely better at coding with AI.",
-    copy: "Turn audits, patterns, and project rules into a feedback loop that improves both developer judgment and agent output.",
+    icon: Check,
+    title: "Evidence-first verification",
+    copy: "Record commands, findings, fixes, and completion claims as an auditable history.",
   },
   {
-    icon: Sigma,
-    title: "Make every token produce useful progress.",
-    copy: "Less repeated context, fewer speculative rewrites, clearer next steps, and verifiable work that survives beyond one conversation.",
+    icon: GitBranch,
+    title: "Scope and plan tracking",
+    copy: "Compare intended work against the real diff and surface task-scope drift early.",
+  },
+  {
+    icon: LockKeyhole,
+    title: "Public and private skills",
+    copy: "Share community skills publicly while keeping internal workflows private.",
   },
 ] as const;
 
 const workflow = [
   [
+    "01",
     "Specify",
-    "Describe the project",
-    "Keep architecture, rules, patterns, templates, and active work entirely inside agents/.",
+    "Describe how the repository must be changed and verified.",
   ],
   [
     "Watch",
@@ -312,9 +318,9 @@ export default async function HomePage() {
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               AI speed without the cleanup bill.
             </h2>
-            <p className="mt-4 text-muted-foreground">
-              Move quickly without letting context drift, silent shortcuts, or
-              invented completion claims leave your repository in a mess.
+            <p className="mt-5 text-lg leading-8 text-muted-foreground">
+              One project specification, one live watcher, one verification
+              history, and one package-style registry.
             </p>
           </Reveal>
           <RevealStagger className="mt-12 grid overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2 md:gap-px">
@@ -326,17 +332,13 @@ export default async function HomePage() {
                 <div className="flex size-9 items-center justify-center rounded-md border border-foreground transition-transform duration-300 ease-out group-hover:-rotate-[8deg] group-hover:scale-105">
                   {/* <Icon className="size-4" /> */}
                 </div>
-                <h3 className="mt-6 font-display text-xl font-bold tracking-tight">
+                <h3 className="mt-8 font-display text-xl font-semibold tracking-tight">
                   {title}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   {copy}
                 </p>
-                {note && (
-                  <code className="mt-auto w-fit rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                    {note}
-                  </code>
-                )}
+                <ArrowRight className="mt-8 size-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground" />
               </article>
             ))}
           </RevealStagger>
@@ -386,9 +388,9 @@ export default async function HomePage() {
           <Reveal>
             <span className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
               Package-manager discipline
-            </span>
-            <h2 className="mt-4 max-w-xl font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Skills should install like dependencies, not copied snippets.
+            </p>
+            <h2 className="mt-5 font-display text-4xl font-bold tracking-[-0.04em] sm:text-5xl">
+              Skills install like dependencies, not copied snippets.
             </h2>
             <p className="mt-4 max-w-xl text-muted-foreground">
               Declare what your project needs, lock exact immutable versions,
@@ -399,7 +401,7 @@ export default async function HomePage() {
               href="/guides#skills"
               className="mt-6 inline-flex font-semibold underline decoration-border underline-offset-4"
             >
-              See the skill format →
+              Read the skill specification <ArrowRight className="size-4" />
             </Link>
           </Reveal>
           <Reveal className="grid overflow-hidden rounded-2xl border border-border sm:grid-cols-2">
@@ -427,6 +429,13 @@ export default async function HomePage() {
               <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
                 Skills worth reusing.
               </h2>
+              <p className="mt-5 text-lg leading-8 text-muted-foreground">
+                Search public skills from developers and engineering
+                organisations.
+              </p>
+            </div>
+            <div className="w-full max-w-lg">
+              <RegistrySearch />
             </div>
             <Link
               href="/skills"
@@ -447,9 +456,9 @@ export default async function HomePage() {
               <h3 className="mt-5 font-display text-2xl font-bold">
                 The registry is ready for its first skills.
               </h3>
-              <p className="mt-3 max-w-md text-muted-foreground">
-                Publish a workflow you trust and make it useful beyond one
-                project.
+              <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+                Turn a repeatable project practice into a versioned public or
+                private skill.
               </p>
               <Button
                 asChild
@@ -538,7 +547,7 @@ export default async function HomePage() {
               size="lg"
               className="rounded-full border border-border bg-background/35 text-foreground shadow-none transition-transform hover:-translate-y-0.5 hover:bg-muted"
             >
-              <Link href="/guides">Read product guides</Link>
+              <Link href="/skills">Explore skills</Link>
             </Button>
           </div>
         </Reveal>
