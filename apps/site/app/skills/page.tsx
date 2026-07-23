@@ -108,7 +108,10 @@ export default async function SkillsPage({
           </section>
 
           {(query || keyword) && (
-            <Link className="button button-secondary button-small" href="/skills">
+            <Link
+              className="button button-secondary button-small"
+              href="/skills"
+            >
               Clear filters
             </Link>
           )}
@@ -159,7 +162,10 @@ export default async function SkillsPage({
                 <Link className="button" href="/skills">
                   Clear filters
                 </Link>
-                <Link className="button button-secondary" href="/account/skills">
+                <Link
+                  className="button button-secondary"
+                  href="/account/skills"
+                >
                   Publish a package
                 </Link>
               </div>

@@ -20,7 +20,10 @@ export default async function AccountLayout({
           </p>
         </div>
         <form action="/api/auth/logout" method="post">
-          <button className="button button-secondary button-small" type="submit">
+          <button
+            className="button button-secondary button-small"
+            type="submit"
+          >
             <LogOut size={16} />
             Log out
           </button>

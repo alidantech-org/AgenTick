@@ -37,9 +37,7 @@ export async function listAccountSessions(
       expiresAt: sessions.expiresAt,
     })
     .from(sessions)
-    .where(
-      and(eq(sessions.accountId, accountId), isNull(sessions.revokedAt)),
-    )
+    .where(and(eq(sessions.accountId, accountId), isNull(sessions.revokedAt)))
     .orderBy(desc(sessions.lastSeenAt));
 
   return rows.map((row) => ({

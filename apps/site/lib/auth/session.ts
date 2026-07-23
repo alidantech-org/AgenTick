@@ -99,12 +99,7 @@ export async function getSessionAccount(): Promise<SessionAccount | null> {
   await database()
     .update(sessions)
     .set({ lastSeenAt: now })
-    .where(
-      and(
-        eq(sessions.tokenHash, tokenHash),
-        isNull(sessions.revokedAt),
-      ),
-    );
+    .where(and(eq(sessions.tokenHash, tokenHash), isNull(sessions.revokedAt)));
 
   return account;
 }

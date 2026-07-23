@@ -16,7 +16,8 @@ const quickLinks = [
   {
     href: "/account/skills",
     title: "Manage packages",
-    description: "Publish releases, update metadata, and review package activity.",
+    description:
+      "Publish releases, update metadata, and review package activity.",
     icon: Package2,
   },
   {
@@ -28,7 +29,8 @@ const quickLinks = [
   {
     href: "/account/tokens",
     title: "Publishing tokens",
-    description: "Create and revoke credentials for CLI pull and push operations.",
+    description:
+      "Create and revoke credentials for CLI pull and push operations.",
     icon: KeyRound,
   },
   {
@@ -50,8 +52,8 @@ export default async function AccountPage() {
           <span className="section-label">Workspace overview</span>
           <h2>Everything you publish, in one place</h2>
           <p>
-            Monitor your registry footprint, manage access, and keep every Skillib
-            publishing workflow accountable.
+            Monitor your registry footprint, manage access, and keep every
+            Skillib publishing workflow accountable.
           </p>
         </div>
       </section>

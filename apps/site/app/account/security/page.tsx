@@ -37,7 +37,9 @@ export default async function AccountSecurityPage() {
         <article>
           <LockKeyhole size={20} />
           <div>
-            <strong>{sessions.length} active session{sessions.length === 1 ? "" : "s"}</strong>
+            <strong>
+              {sessions.length} active session{sessions.length === 1 ? "" : "s"}
+            </strong>
             <p>Thirty-day session expiry with device tracking</p>
           </div>
         </article>

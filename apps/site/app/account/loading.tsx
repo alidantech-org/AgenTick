@@ -1,6 +1,10 @@
 export default function AccountLoading() {
   return (
-    <div className="account-content-stack" aria-busy="true" aria-label="Loading account">
+    <div
+      className="account-content-stack"
+      aria-busy="true"
+      aria-label="Loading account"
+    >
       <section className="account-page-heading">
         <div className="skeleton-line skeleton-label" />
         <div className="skeleton-line skeleton-title" />

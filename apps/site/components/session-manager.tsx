@@ -23,7 +23,11 @@ function deviceName(userAgent: string | null): string {
   return "Browser session";
 }
 
-export function SessionManager({ sessions }: { sessions: AccountSessionSummary[] }) {
+export function SessionManager({
+  sessions,
+}: {
+  sessions: AccountSessionSummary[];
+}) {
   const otherCount = sessions.filter((session) => !session.current).length;
 
   return (
@@ -39,7 +43,10 @@ export function SessionManager({ sessions }: { sessions: AccountSessionSummary[]
         </div>
         {otherCount > 0 && (
           <form action={revokeOtherSessionsAction}>
-            <button className="button button-secondary button-small" type="submit">
+            <button
+              className="button button-secondary button-small"
+              type="submit"
+            >
               <ShieldCheck size={16} />
               Revoke other sessions
             </button>
@@ -58,7 +65,9 @@ export function SessionManager({ sessions }: { sessions: AccountSessionSummary[]
               <div className="session-copy">
                 <div className="session-title-row">
                   <strong>{deviceName(session.userAgent)}</strong>
-                  {session.current && <span className="status-pill">Current session</span>}
+                  {session.current && (
+                    <span className="status-pill">Current session</span>
+                  )}
                 </div>
                 <p>{session.userAgent ?? "User agent unavailable"}</p>
                 <div className="session-meta">
