@@ -1,5 +1,21 @@
-import { bigint, bytea, index, jsonb, pgSchema, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  customType,
+  index,
+  jsonb,
+  pgSchema,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt } from "./common";
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+});
 
 export const storageSchema = pgSchema("storage");
 export const storageProviderEnum = storageSchema.enum("provider", [
@@ -27,7 +43,10 @@ export const objects = storageSchema.table(
     sha512: text("sha512").notNull(),
     compression: text("compression"),
     payload: bytea("payload"),
-    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt,
@@ -58,7 +77,9 @@ export const uploads = storageSchema.table(
     }),
     createdAt,
   },
-  (table) => [index("uploads_status_expiry_idx").on(table.status, table.expiresAt)],
+  (table) => [
+    index("uploads_status_expiry_idx").on(table.status, table.expiresAt),
+  ],
 );
 
 export type StorageObject = typeof objects.$inferSelect;
