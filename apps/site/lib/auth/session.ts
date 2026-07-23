@@ -28,14 +28,16 @@ export async function createSession(accountId: string): Promise<void> {
   const ip =
     requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
 
-  await database().insert(sessions).values({
-    accountId,
-    tokenHash,
-    expiresAt,
-    lastSeenAt: now,
-    userAgent,
-    ipHash: ip ? fingerprint([ip]) : null,
-  });
+  await database()
+    .insert(sessions)
+    .values({
+      accountId,
+      tokenHash,
+      expiresAt,
+      lastSeenAt: now,
+      userAgent,
+      ipHash: ip ? fingerprint([ip]) : null,
+    });
 
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {

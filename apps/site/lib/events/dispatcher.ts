@@ -3,10 +3,7 @@ import "server-only";
 import { sendLoginOtp, sendOrganizationInvite } from "@/lib/auth/mail";
 import { claimEvents, completeEvent, failEvent } from "./bus";
 
-function stringField(
-  payload: Record<string, unknown>,
-  field: string,
-): string {
+function stringField(payload: Record<string, unknown>, field: string): string {
   const value = payload[field];
   if (typeof value !== "string" || !value) {
     throw new Error(`Outbox payload is missing ${field}`);

@@ -34,7 +34,9 @@ export async function getAccountOverview(accountId: string) {
       db
         .select({ value: count() })
         .from(apiTokens)
-        .where(and(eq(apiTokens.accountId, accountId), isNull(apiTokens.revokedAt))),
+        .where(
+          and(eq(apiTokens.accountId, accountId), isNull(apiTokens.revokedAt)),
+        ),
     ]);
 
   return {
@@ -74,14 +76,16 @@ export async function createApiToken(accountId: string, rawName: string) {
   const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
   const scopes = ["skills:read", "skills:write"];
 
-  await database().insert(apiTokens).values({
-    accountId,
-    tokenPrefix: token.slice(0, 16),
-    tokenHash: hashApiToken(token),
-    name,
-    scopes,
-    expiresAt,
-  });
+  await database()
+    .insert(apiTokens)
+    .values({
+      accountId,
+      tokenPrefix: token.slice(0, 16),
+      tokenHash: hashApiToken(token),
+      name,
+      scopes,
+      expiresAt,
+    });
 
   return { token, name, scopes, expiresAt: expiresAt.toISOString() };
 }
@@ -229,7 +233,9 @@ export async function inviteOrganizationMember(input: {
 
   const delivery = await dispatchPendingEvents(10);
   if (delivery.failed > 0) {
-    throw new Error("Invitation created, but email delivery failed. Retry delivery.");
+    throw new Error(
+      "Invitation created, but email delivery failed. Retry delivery.",
+    );
   }
 
   return {

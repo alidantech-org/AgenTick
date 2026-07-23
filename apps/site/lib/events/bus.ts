@@ -23,9 +23,7 @@ export type SkillibEvent =
       };
     };
 
-type Transaction = Parameters<
-  Parameters<SkillibDatabase["transaction"]>[0]
->[0];
+type Transaction = Parameters<Parameters<SkillibDatabase["transaction"]>[0]>[0];
 
 export async function publishEvent(
   event: SkillibEvent,
@@ -114,7 +112,8 @@ export async function failEvent(
       attempts: nextAttempt,
       lockedAt: null,
       availableAt: new Date(Date.now() + delaySeconds * 1000),
-      lastError: error instanceof Error ? error.message.slice(0, 2000) : "Unknown error",
+      lastError:
+        error instanceof Error ? error.message.slice(0, 2000) : "Unknown error",
     })
     .where(eq(outboxEvents.id, id));
 }

@@ -1,15 +1,7 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import {
-  and,
-  desc,
-  eq,
-  ilike,
-  isNull,
-  or,
-  sql,
-} from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import {
   integrityForBundle,
   parseSkillMarkdown,
@@ -62,9 +54,7 @@ export interface SkillDetail extends SkillSummary {
 }
 
 type SkillRow = typeof skills.$inferSelect;
-type Transaction = Parameters<
-  Parameters<SkillibDatabase["transaction"]>[0]
->[0];
+type Transaction = Parameters<Parameters<SkillibDatabase["transaction"]>[0]>[0];
 
 function summaryFromRow(row: SkillRow): SkillSummary {
   return {
@@ -294,8 +284,8 @@ export async function getSkillDetail(
     bundle: validateSkillBundle(version.bundle),
   }));
   const latestBundle =
-    bundles.find((version) => version.version === skill.latestVersion)?.bundle ??
-    bundles[0]?.bundle;
+    bundles.find((version) => version.version === skill.latestVersion)
+      ?.bundle ?? bundles[0]?.bundle;
   const skillMarkdown = latestBundle?.files.find(
     (file) => file.path === "SKILL.md",
   );
@@ -336,7 +326,10 @@ async function namespacePermission(
     .leftJoin(
       organizationMembers,
       and(
-        eq(organizationMembers.organizationId, registryNamespaces.organizationId),
+        eq(
+          organizationMembers.organizationId,
+          registryNamespaces.organizationId,
+        ),
         eq(organizationMembers.accountId, principal.id),
       ),
     )
@@ -394,9 +387,7 @@ export async function publishSkill(input: {
       const existing = await tx
         .select()
         .from(skills)
-        .where(
-          and(eq(skills.namespaceSlug, namespace), eq(skills.name, name)),
-        )
+        .where(and(eq(skills.namespaceSlug, namespace), eq(skills.name, name)))
         .limit(1);
 
       const current = existing[0];
@@ -522,7 +513,9 @@ export async function resolveSkill(input: {
     )
     .orderBy(desc(skillVersions.publishedAt));
   const selected = versions
-    .filter((version) => versionMatches(version.version, input.requestedVersion))
+    .filter((version) =>
+      versionMatches(version.version, input.requestedVersion),
+    )
     .sort((left, right) => compareVersions(right.version, left.version))[0];
   if (!selected) return null;
 

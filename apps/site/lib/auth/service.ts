@@ -21,9 +21,7 @@ function displayNameFromEmail(email: string): string {
     .slice(0, 80);
 }
 
-type Transaction = Parameters<
-  Parameters<SkillibDatabase["transaction"]>[0]
->[0];
+type Transaction = Parameters<Parameters<SkillibDatabase["transaction"]>[0]>[0];
 
 async function uniqueHandle(email: string, tx: Transaction): Promise<string> {
   const local =
