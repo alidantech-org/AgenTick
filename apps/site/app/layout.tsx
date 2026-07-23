@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/site-header";
+import "./auth.css";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Skillib — Make AI coding accountable",
+    default: "Skillib — Make AI Coding Accountable",
     template: "%s · Skillib",
   },
   description:
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   ),
   openGraph: {
-    title: "Skillib — Make AI coding accountable",
+    title: "Skillib — Make AI Coding Accountable",
     description:
       "Watch AI-assisted software work, verify it against project rules, and share versioned Agent Skills.",
     type: "website",
@@ -55,6 +56,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <a className="skip-link" href="#main-content">
+            Skip to Main Content
+          </a>
           <SiteHeader />
           {children}
           <SiteFooter />
