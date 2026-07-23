@@ -7,23 +7,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const packDirectory = join(root, ".skillib-pack");
 const isWindows = process.platform === "win32";
 
-function quoteWindows(value) {
-  return `"${String(value).replaceAll('"', '""')}"`;
-}
-
-function runCommand(command, args, options = {}) {
-  if (isWindows) {
-    const shell = process.env.ComSpec || "cmd.exe";
-    const expression = [quoteWindows(command), ...args.map(quoteWindows)].join(
-      " ",
-    );
-    return execFileSync(shell, ["/d", "/s", "/c", expression], {
-      cwd: root,
-      env: process.env,
-      ...options,
-    });
-  }
-
+function runExecutable(command, args, options = {}) {
   return execFileSync(command, args, {
     cwd: root,
     env: process.env,
@@ -31,13 +15,30 @@ function runCommand(command, args, options = {}) {
   });
 }
 
-function runPnpm(args) {
-  runCommand("pnpm", args, { stdio: "inherit" });
+function resolvePnpmInvocation(args) {
+  const npmExecPath = process.env.npm_execpath;
+
+  if (npmExecPath && isAbsolute(npmExecPath)) {
+    return {
+      command: process.execPath,
+      args: [npmExecPath, ...args],
+    };
+  }
+
+  return {
+    command: isWindows ? "pnpm.cmd" : "pnpm",
+    args,
+  };
+}
+
+function runPnpm(args, options = {}) {
+  const invocation = resolvePnpmInvocation(args);
+  return runExecutable(invocation.command, invocation.args, options);
 }
 
 function capturePnpm(args) {
   return String(
-    runCommand("pnpm", ["--silent", ...args], { encoding: "utf8" }),
+    runPnpm(["--silent", ...args], { encoding: "utf8" }),
   ).trim();
 }
 
@@ -57,11 +58,25 @@ function parseGlobalBin(output) {
   return globalBin;
 }
 
+function verifyInstalledCli(executable) {
+  if (!isWindows) {
+    runExecutable(executable, ["--help"], { stdio: "inherit" });
+    return;
+  }
+
+  const shell = process.env.ComSpec || "cmd.exe";
+  const command = `call "${executable.replaceAll('"', '""')}" --help`;
+  runExecutable(shell, ["/d", "/c", command], { stdio: "inherit" });
+}
+
 rmSync(packDirectory, { recursive: true, force: true });
 mkdirSync(packDirectory, { recursive: true });
 
-runPnpm(["--filter", "skillib", "build"]);
-runPnpm(["--filter", "skillib", "pack", "--pack-destination", packDirectory]);
+runPnpm(["--filter", "skillib", "build"], { stdio: "inherit" });
+runPnpm(
+  ["--filter", "skillib", "pack", "--pack-destination", packDirectory],
+  { stdio: "inherit" },
+);
 
 const tarballs = readdirSync(packDirectory)
   .filter((name) => /^skillib-.*\.tgz$/.test(name))
@@ -72,12 +87,14 @@ if (!tarball) {
   throw new Error(`No Skillib tarball was created in ${packDirectory}`);
 }
 
-runPnpm(["add", "--global", join(packDirectory, tarball)]);
+runPnpm(["add", "--global", join(packDirectory, tarball)], {
+  stdio: "inherit",
+});
 
 const globalBin = parseGlobalBin(capturePnpm(["bin", "--global"]));
 const executable = join(globalBin, isWindows ? "skillib.cmd" : "skillib");
 
-runCommand(executable, ["--help"], { stdio: "inherit" });
+verifyInstalledCli(executable);
 
 const normalizedBin = resolve(globalBin).toLowerCase();
 const pathEntries = (process.env.PATH ?? "")
