@@ -3,6 +3,7 @@ import "server-only";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres, { type Options } from "postgres";
 import * as schema from "./schema";
+import { normalizePostgresUrl } from "./url";
 
 type Database = ReturnType<typeof drizzle<typeof schema>>;
 
@@ -18,10 +19,7 @@ function databaseUrl(): string {
   if (!value) {
     throw new Error("DATABASE_URL is required and must point to PostgreSQL");
   }
-  if (!/^postgres(?:ql)?:\/\//i.test(value)) {
-    throw new Error("DATABASE_URL must use the postgresql:// protocol");
-  }
-  return value;
+  return normalizePostgresUrl(value);
 }
 
 function createClient() {
