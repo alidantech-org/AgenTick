@@ -10,6 +10,7 @@ members = [
   "crates/skillib-ir",
   "crates/skillib-compiler",
   "crates/skillib-formatter",
+  "crates/skillib-package",
   "crates/skillib-registry",
   "crates/skillib-watcher",
   "crates/skillib-runtime",
