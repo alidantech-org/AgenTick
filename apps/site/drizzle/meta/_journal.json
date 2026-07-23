@@ -12,6 +12,13 @@
     {
       "idx": 1,
       "version": "7",
+      "when": 1784818799000,
+      "tag": "0000a_prepare_domain_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
       "when": 1784818800000,
       "tag": "0001_domain_registry",
       "breakpoints": true
