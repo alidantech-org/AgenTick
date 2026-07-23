@@ -1,0 +1,1 @@
+update postgres migration once
