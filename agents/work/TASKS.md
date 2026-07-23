@@ -16,8 +16,8 @@ Plan: `agents/work/REGISTRY_UPGRADE_PLAN.md`
 ## Registry services
 
 - [ ] Replace legacy skill/version internals with package/release terminology.
-- [ ] Resolve namespace IDs during package creation.
-- [ ] Allocate integer release numbers transactionally.
+- [x] Resolve namespace IDs during package creation.
+- [x] Allocate integer release numbers transactionally.
 - [ ] Implement distribution tags and release resolution.
 - [ ] Implement release lifecycle and yanking.
 - [ ] Move analytics writes to package/release identifiers and daily rollups.
