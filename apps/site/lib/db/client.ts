@@ -1,7 +1,7 @@
 import "server-only";
 
 import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import postgres, { type Options } from "postgres";
 import * as schema from "./schema";
 
 type Database = ReturnType<typeof drizzle<typeof schema>>;
@@ -25,18 +25,19 @@ function databaseUrl(): string {
 }
 
 function createClient() {
-  return postgres(databaseUrl(), {
+  const options: Options<Record<string, never>> = {
     max: Number(process.env.DATABASE_POOL_MAX ?? 10),
     idle_timeout: 20,
     connect_timeout: 10,
     prepare: process.env.DATABASE_PREPARE_STATEMENTS !== "false",
-    ssl:
-      process.env.DATABASE_SSL === "false"
-        ? false
-        : process.env.NODE_ENV === "production"
-          ? "require"
-          : undefined,
-  });
+    ...(process.env.DATABASE_SSL === "false"
+      ? { ssl: false }
+      : process.env.NODE_ENV === "production"
+        ? { ssl: "require" as const }
+        : {}),
+  };
+
+  return postgres(databaseUrl(), options);
 }
 
 export function database(): Database {
