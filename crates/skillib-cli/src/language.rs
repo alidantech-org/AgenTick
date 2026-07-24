@@ -20,8 +20,11 @@ pub fn check(path: &Path, json: bool) -> Result<()> {
         for diagnostic in &result.diagnostics {
             ui::info(format!("{}: {}", diagnostic.code, diagnostic.message));
         }
-        if result.success { ui::success(result.ir_hash.as_deref().unwrap_or("passed")); }
-        else { ui::error("validation failed"); }
+        if result.success {
+            ui::success(result.ir_hash.as_deref().unwrap_or("passed"));
+        } else {
+            ui::error("validation failed");
+        }
     }
     anyhow::ensure!(result.success, "validation failed");
     Ok(())
@@ -59,18 +62,44 @@ pub fn inspect(path: &Path) -> Result<()> {
     ui::heading("inspect", Some(path));
     let result = SkillCompiler.compile(&load(path)?);
     ui::info(format!("source hash  {}", result.source_hash));
-    ui::info(format!("IR hash      {}", result.ir_hash.as_deref().unwrap_or("-")));
+    ui::info(format!(
+        "IR hash      {}",
+        result.ir_hash.as_deref().unwrap_or("-")
+    ));
     ui::info(format!("diagnostics  {}", result.diagnostics.len()));
     anyhow::ensure!(result.success, "inspection found errors");
     ui::success("valid");
     Ok(())
 }
 
-pub fn new_skill(name: &str, extension: &str) -> Result<PathBuf> {
-    let extension = match extension { ".sl" | "sl" => "sl", _ => "skillib" };
-    let path = PathBuf::from(format!("{name}.{extension}"));
+pub fn new_skill(root: &Path, identity: &str, extension: &str) -> Result<PathBuf> {
+    let (namespace, name) = package_parts(identity)?;
+    let extension = match extension {
+        ".sl" | "sl" => "sl",
+        _ => "skillib",
+    };
+    let directory = root.join("agents/skills").join(namespace).join(name);
+    let path = directory.join(format!("skill.{extension}"));
     anyhow::ensure!(!path.exists(), "{} already exists", path.display());
-    let source = format!("define {name}\nlanguage \"0.1\"\n\ndescription:\n    Describe this skill.\n\ngoal:\n    - Define the intended result.\n\nprocess:\n    1. Inspect the required context.\n    2. Produce the expected result.\n\nconstraints:\n    - Do not invent evidence.\n\nexpected:\n    - Result\n");
-    std::fs::write(&path, source)?;
+    std::fs::create_dir_all(&directory)?;
+    std::fs::write(&path, template(identity))?;
     Ok(path)
+}
+
+fn package_parts(identity: &str) -> Result<(&str, &str)> {
+    let value = identity.trim_start_matches('@');
+    let mut parts = value.split('/');
+    let namespace = parts.next().unwrap_or_default();
+    let name = parts.next().unwrap_or_default();
+    anyhow::ensure!(
+        !namespace.is_empty() && !name.is_empty() && parts.next().is_none(),
+        "skill name must use @namespace/name"
+    );
+    Ok((namespace, name))
+}
+
+fn template(identity: &str) -> String {
+    format!(
+        "define {identity}\nlanguage \"0.1\"\nversion \"0.1.0\"\n\ndescription:\n    Describe this skill.\n\ngoal:\n    - Define the intended result.\n\nprocess:\n    1. Inspect the required context.\n    2. Produce the expected result.\n\nconstraints:\n    - Do not invent evidence.\n\nexpected:\n    - Result\n"
+    )
 }
