@@ -57,50 +57,28 @@ jobs:
           node-version: "24"
       - run: corepack enable
       - name: Install dependencies
-        shell: bash
-        run: |
-          pnpm install --frozen-lockfile > /tmp/skillib-install.log 2>&1
+        run: pnpm install --frozen-lockfile > /tmp/skillib-install.log 2>&1
       - name: Apply PostgreSQL migrations
-        shell: bash
-        run: |
-          pnpm --filter @alidantech/skillib-site db:migrate > /tmp/skillib-migrate.log 2>&1
+        run: pnpm --filter @alidantech/skillib-site db:migrate > /tmp/skillib-migrate.log 2>&1
       - name: Format check
-        shell: bash
-        run: |
-          pnpm format:check > /tmp/skillib-format.log 2>&1
+        run: pnpm format:check > /tmp/skillib-format.log 2>&1
       - name: Typecheck
-        shell: bash
-        run: |
-          pnpm typecheck > /tmp/skillib-typecheck.log 2>&1
+        run: pnpm typecheck > /tmp/skillib-typecheck.log 2>&1
       - name: Test
-        shell: bash
-        run: |
-          pnpm test > /tmp/skillib-test.log 2>&1
+        run: pnpm test > /tmp/skillib-test.log 2>&1
       - name: Build
-        shell: bash
-        run: |
-          pnpm build > /tmp/skillib-build.log 2>&1
-      - name: Packed CLI smoke
-        shell: bash
+        run: pnpm build > /tmp/skillib-build.log 2>&1
+      - name: Rust CLI smoke
         run: |
           set -euo pipefail
-          pack_dir=/tmp/skillib-pack
-          global_home=/tmp/skillib-global
-          rm -rf "$pack_dir" "$global_home"
-          mkdir -p "$pack_dir" "$global_home"
-          pnpm --filter skillib pack --pack-destination "$pack_dir" > /tmp/skillib-package.log 2>&1
-          tarball="$(find "$pack_dir" -maxdepth 1 -name 'skillib-*.tgz' -print -quit)"
-          test -n "$tarball"
-          if tar -xOf "$tarball" package/package.json | grep -q 'workspace:'; then
-            echo "Packed Skillib artifact contains workspace protocol dependencies" >> /tmp/skillib-package.log
-            exit 1
-          fi
-          export PNPM_HOME="$global_home"
-          export PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH"
-          pnpm add --global "$tarball" >> /tmp/skillib-package.log 2>&1
-          skillib --help >> /tmp/skillib-package.log 2>&1
+          cargo build --quiet --release --package skillib-cli
+          target/release/skillib --help > /tmp/skillib-cli.log
+          temp_project="$(mktemp -d)"
+          target/release/skillib init "$temp_project" >> /tmp/skillib-cli.log
+          test -f "$temp_project/agents/skillib.yml"
+          target/release/skillib new "$temp_project/agents/example.sl" --name @ci/example >> /tmp/skillib-cli.log
+          target/release/skillib check "$temp_project/agents/example.sl" >> /tmp/skillib-cli.log
       - name: Runtime and SMTP smoke
-        shell: bash
         run: |
           set -euo pipefail
           pnpm --filter @alidantech/skillib-site exec next start --hostname 127.0.0.1 --port 3100 > /tmp/skillib-runtime.log 2>&1 &
@@ -142,7 +120,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-diagnostics
-          path: |
-            /tmp/skillib-*.log
-            /tmp/skillib-pack/*.tgz
+          path: /tmp/skillib-*.log
           if-no-files-found: ignore
