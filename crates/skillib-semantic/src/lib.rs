@@ -1,6 +1,9 @@
 //! Semantic validation and normalized Skillib model.
 
 mod lower;
+mod lower_events;
+mod lower_inputs;
+mod lower_sources;
 mod model;
 mod validate;
 
@@ -18,6 +21,8 @@ pub struct SemanticResult {
 #[must_use]
 pub fn analyze(file: &SkillFile) -> SemanticResult {
     let diagnostics = validate::validate(file);
-    let model = (!has_errors(&diagnostics)).then(|| lower::lower(file)).flatten();
+    let model = (!has_errors(&diagnostics))
+        .then(|| lower::lower(file))
+        .flatten();
     SemanticResult { model, diagnostics }
 }
