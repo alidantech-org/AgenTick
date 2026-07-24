@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseAgentickConfig, parseSkillLock } from "./index.js";
 
-describe("AgenTick configuration", () => {
+describe("Skillib configuration", () => {
   it("accepts a self-contained agents configuration", () => {
     const value = parseAgentickConfig(`
 version: 1
@@ -14,7 +14,7 @@ agents:
   writable: [agents/work/**]
 verify: { commands: [] }
 runtime: { host: 127.0.0.1, port: 4317 }
-registry: { urlEnv: AGENTICK_REGISTRY_URL }
+registry: { urlEnv: SKILLIB_REGISTRY_URL }
 skilllib:
   directory: agents/skillib
   requireIntegrity: true

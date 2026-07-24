@@ -15,6 +15,39 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: skillib
+          POSTGRES_USER: skillib
+          POSTGRES_PASSWORD: skillib
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U skillib -d skillib"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      mailpit:
+        image: axllent/mailpit:v1.27
+        ports:
+          - 1025:1025
+          - 8025:8025
+    env:
+      DATABASE_URL: postgresql://skillib:skillib@127.0.0.1:5432/skillib
+      DATABASE_SSL: "false"
+      DATABASE_PREPARE_STATEMENTS: "true"
+      AUTH_SECRET: skillib-ci-auth-secret-at-least-thirty-two-characters
+      SKILLIB_TOKEN_PEPPER: skillib-ci-token-pepper-at-least-thirty-two-characters
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      SMTP_AUTH: "false"
+      SMTP_FROM: Skillib CI <no-reply@skillib.test>
+      SMTP_POOL: "false"
+      EVENT_DISPATCH_SECRET: skillib-ci-event-dispatch-secret
     steps:
       - uses: actions/checkout@v6
         with:
@@ -24,34 +57,46 @@ jobs:
           node-version: "24"
       - run: corepack enable
       - name: Install dependencies
-        shell: bash
-        run: |
-          pnpm install --frozen-lockfile > /tmp/agentick-install.log 2>&1
-      - name: Format check
-        shell: bash
-        run: |
-          pnpm format:check > /tmp/agentick-format.log 2>&1
+        run: pnpm install --frozen-lockfile > /tmp/skillib-install.log 2>&1
+      - name: Apply PostgreSQL migrations
+        run: pnpm --filter @alidantech/skillib-site db:migrate > /tmp/skillib-migrate.log 2>&1
+      - name: Format ephemeral checkout
+        run: pnpm format > /tmp/skillib-format.log 2>&1
+      - name: Upload formatted source
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-source
+          path: |
+            apps/site
+            scripts
+          retention-days: 1
       - name: Typecheck
-        shell: bash
-        run: |
-          pnpm typecheck > /tmp/agentick-typecheck.log 2>&1
+        run: pnpm typecheck > /tmp/skillib-typecheck.log 2>&1
       - name: Test
-        shell: bash
-        run: |
-          pnpm test > /tmp/agentick-test.log 2>&1
+        run: pnpm test > /tmp/skillib-test.log 2>&1
       - name: Build
-        shell: bash
+        run: pnpm build > /tmp/skillib-build.log 2>&1
+      - name: Rust CLI smoke
         run: |
-          pnpm build > /tmp/agentick-build.log 2>&1
-      - name: Runtime smoke
-        shell: bash
-        env:
-          DATABASE_URL: file:/tmp/agentick-ci.db
-          AUTH_SECRET: agentick-ci-auth-secret
-          AGENTICK_TOKEN_PEPPER: agentick-ci-token-pepper
-          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3100
+          set -euo pipefail
+          cargo build --quiet --release --package skillib-cli
+          binary="$GITHUB_WORKSPACE/target/release/skillib"
+          "$binary" --help > /tmp/skillib-cli.log
+          project="$(mktemp -d)"
+          git -C "$project" init --quiet
+          (
+            cd "$project"
+            "$binary" init >> /tmp/skillib-cli.log
+            test -f agents/skillib.yml
+            "$binary" new @ci/example --extension sl >> /tmp/skillib-cli.log
+            test -f agents/skills/ci/example/skill.sl
+            "$binary" check agents/skills/ci/example/skill.sl >> /tmp/skillib-cli.log
+            "$binary" verify >> /tmp/skillib-cli.log
+          )
+      - name: Runtime and SMTP smoke
         run: |
-          pnpm --filter @alidantech/agentick-site exec next start --hostname 127.0.0.1 --port 3100 > /tmp/agentick-runtime.log 2>&1 &
+          set -euo pipefail
+          pnpm --filter @alidantech/skillib-site exec next start --hostname 127.0.0.1 --port 3100 > /tmp/skillib-runtime.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           ready=0
@@ -63,16 +108,32 @@ jobs:
             sleep 1
           done
           if [ "$ready" -ne 1 ]; then
-            cat /tmp/agentick-runtime.log
+            cat /tmp/skillib-runtime.log
             exit 1
           fi
           for path in / /skills /login /api/health; do
             curl -fsS "http://127.0.0.1:3100${path}" > /dev/null
           done
+          response="$(curl -fsS -X POST http://127.0.0.1:3100/api/auth/request-otp -H 'content-type: application/json' --data '{"email":"ci@example.com"}')"
+          printf '%s\n' "$response" > /tmp/skillib-auth-response.log
+          echo "$response" | grep -q '"ok":true'
+          if echo "$response" | grep -qiE 'debugOtp|[0-9]{8}'; then
+            echo "OTP response exposed a code" >> /tmp/skillib-auth-response.log
+            exit 1
+          fi
+          for _ in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8025/api/v1/messages > /tmp/skillib-mailpit.log
+            if grep -q 'ci@example.com' /tmp/skillib-mailpit.log; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "SMTP message was not captured" >> /tmp/skillib-mailpit.log
+          exit 1
       - name: Upload failed command logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: ci-diagnostics
-          path: /tmp/agentick-*.log
+          path: /tmp/skillib-*.log
           if-no-files-found: ignore

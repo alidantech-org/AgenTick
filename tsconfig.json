@@ -16,10 +16,10 @@
     "esModuleInterop": true,
     "types": ["node"],
     "paths": {
-      "@alidantech/agentick-config": ["./packages/config/src/index.ts"],
-      "@alidantech/agentick-shared": ["./packages/shared/src/index.ts"],
-      "@alidantech/agentick-skill-lib": ["./packages/skill-lib/src/index.ts"],
-      "@alidantech/agentick-ui": ["./packages/ui/src/index.ts"]
+      "@alidantech/skillib-config": ["./packages/config/src/index.ts"],
+      "@alidantech/skillib-shared": ["./packages/shared/src/index.ts"],
+      "@alidantech/skillib-skill-lib": ["./packages/skill-lib/src/index.ts"],
+      "@alidantech/skillib-ui": ["./packages/ui/src/index.ts"]
     }
   }
 }

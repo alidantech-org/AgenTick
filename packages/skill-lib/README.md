@@ -1,5 +1,5 @@
-# @alidantech/agentick-skill-lib
+# @alidantech/skillib-skill-lib
 
 Validation, canonical bundles, and integrity primitives for Agent Skills.
 
-Part of [AgenTick](https://github.com/alidantech-org/AgenTick).
+Part of [Skillib](https://github.com/alidantech-org/AgenTick).

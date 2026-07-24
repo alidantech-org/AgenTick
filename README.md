@@ -1,15 +1,15 @@
-# AgenTick
+# Skillib
 
-**Agent + tick ✅**
+**Skill library ✅**
 
-AgenTick watches project files during AI-assisted coding, verifies work against a
+Skillib watches project files during AI-assisted coding, verifies work against a
 project-local `agents/` specification, and preserves auditable history.
 
 ## Principles
 
 - A user project needs only an `agents/` directory.
-- AgenTick never requires a root `AGENTS.md` or root configuration file.
-- `agentick init` discovers the Git root from the current path, preserves all
+- Skillib never requires a root `AGENTS.md` or root configuration file.
+- `skillib init` discovers the Git root from the current path, preserves all
   existing project files, and only appends a marked block to the root `.gitignore`.
 - Skills follow the open Agent Skills `SKILL.md` structure and are declared,
   locked, and installed entirely under `agents/`.
@@ -20,7 +20,7 @@ project-local `agents/` specification, and preserves auditable history.
 
 ## Workspace
 
-- `packages/agentick` — published CLI and local watcher runtime.
+- `packages/skillib` — published `skillib` CLI and local watcher runtime.
 - `packages/config` — YAML schemas and defaults.
 - `packages/skill-lib` — skill format, bundle validation, integrity, and registry primitives.
 - `packages/shared` — shared events and finding types.
@@ -30,24 +30,24 @@ project-local `agents/` specification, and preserves auditable history.
 ## Initial CLI
 
 ```text
-agentick init
-agentick verify [--no-commands]
-agentick watch [--port 4317]
-agentick status
-agentick history
-agentick skill list
-agentick skill add namespace/review-skill@2.1.0
-agentick skill remove namespace/review-skill
-agentick pull
-agentick login
-agentick whoami
-agentick push agents/skills/my-skill --id namespace/my-skill --version 1.0.0 --visibility private
+skillib init
+skillib verify [--no-commands]
+skillib watch [--port 4317]
+skillib status
+skillib history
+skillib skill list
+skillib skill add namespace/review-skill@2.1.0
+skillib skill remove namespace/review-skill
+skillib pull
+skillib login
+skillib whoami
+skillib push agents/skills/my-skill --id namespace/my-skill --version 1.0.0 --visibility private
 ```
 
 `pull` requires the registry URL environment variable configured in
-`agents/agentick.yml`. Public pulls are anonymous. Private pulls and publishing
-use `AGENTICK_TOKEN` or the project credential saved by `agentick login` in the
-git-ignored `agents/.agentick/auth.json` file.
+`agents/skillib.yml`. Public pulls are anonymous. Private pulls and publishing
+use `SKILLIB_TOKEN` or the project credential saved by `skillib login` in the
+git-ignored `agents/.skillib/auth.json` file.
 
 ## Development
 
@@ -56,8 +56,16 @@ corepack enable
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm --filter @alidantech/agentick build
-node packages/agentick/dist/cli/index.js init
+pnpm build
 ```
+
+To install the current working tree globally, use the packed distribution instead of linking the workspace package:
+
+```bash
+pnpm skillib:install-global
+skillib --help
+```
+
+The command builds Skillib, creates the npm `.tgz` artifact, and installs that exact artifact globally. The generated tarball is stored under the ignored `.skillib-pack/` directory.
 
 The current registry and account milestone is tracked in issue #3 and PR #2.

@@ -1,3 +1,4 @@
+import "./organisations.css";
 import Link from "next/link";
 import { OrganisationManager } from "@/components/organisation-manager";
 import { requireAccount } from "@/lib/auth/dal";
@@ -31,9 +32,7 @@ export default async function OrganisationsPage() {
               <footer>
                 <span>{organization.memberCount} members</span>
                 <span>{organization.skillCount} skills</span>
-                <Link
-                  href={`/account/organisation/${organization.slug}/skills`}
-                >
+                <Link href={`/account/organisation/${organization.slug}/skills`}>
                   Open namespace →
                 </Link>
               </footer>

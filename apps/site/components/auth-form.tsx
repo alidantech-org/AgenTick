@@ -1,8 +1,16 @@
 "use client";
 
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  KeyRound,
+  Mail,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { FormField } from "@/components/form-field";
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
@@ -18,122 +26,203 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
     event.preventDefault();
     setBusy(true);
     setError("");
-    const response = await fetch("/api/auth/request-otp", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const data = (await response.json()) as {
-      ok?: boolean;
-      error?: string;
-      debugOtp?: string;
-    };
-    setBusy(false);
-    if (!response.ok) {
-      setError(data.error ?? "Unable to send code");
-      return;
+    setNotice("");
+
+    try {
+      const response = await fetch("/api/auth/request-otp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok) {
+        setError(
+          data.error ?? "Enter an email address that can receive a code",
+        );
+        return;
+      }
+      setStep("otp");
+      setNotice(`We sent an 8-digit code to ${email.trim().toLowerCase()}.`);
+    } finally {
+      setBusy(false);
     }
-    setStep("otp");
-    setNotice(
-      data.debugOtp
-        ? `Development code: ${data.debugOtp}`
-        : `We sent an 8-digit code to ${email.trim().toLowerCase()}.`,
-    );
   }
 
   async function verifyCode(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
-    const response = await fetch("/api/auth/verify-otp", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, otp }),
-    });
-    const data = (await response.json()) as { ok?: boolean; error?: string };
-    setBusy(false);
-    if (!response.ok) {
-      setError(data.error ?? "Unable to sign in");
-      return;
+
+    try {
+      const response = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const data = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "Enter the latest 8-digit code from your email");
+        return;
+      }
+      const next = search.get("next");
+      const safeNext =
+        next?.startsWith("/") && !next.startsWith("//") ? next : "/account";
+      router.push(safeNext);
+      router.refresh();
+    } finally {
+      setBusy(false);
     }
-    const next = search.get("next");
-    const safeNext =
-      next?.startsWith("/") && !next.startsWith("//") ? next : "/account";
-    router.push(safeNext);
-    router.refresh();
   }
 
+  function changeEmail() {
+    setStep("email");
+    setOtp("");
+    setError("");
+    setNotice("");
+  }
+
+  const isSignup = mode === "signup";
+
   return (
-    <div className="auth-card">
-      <span className="kicker">Passwordless account</span>
-      <h1>
-        {mode === "signup" ? "Create your AgenTick account" : "Welcome back"}
-      </h1>
-      <p>
-        {mode === "signup"
-          ? "Your email becomes your identity. No password to remember or leak."
-          : "Enter your email and confirm the one-time code we send you."}
-      </p>
+    <section className="auth-card" aria-labelledby="auth-title">
+      <div className="auth-progress" aria-label="Authentication progress">
+        <span className="active">1</span>
+        <i aria-hidden="true" />
+        <span className={step === "otp" ? "active" : ""}>2</span>
+      </div>
+
+      <div className="auth-card-heading">
+        <span className="auth-icon" aria-hidden="true">
+          {step === "email" ? <Mail /> : <KeyRound />}
+        </span>
+        <div>
+          <span className="section-label">
+            {step === "email" ? "Passwordless Access" : "Check Your Email"}
+          </span>
+          <h1 id="auth-title">
+            {step === "email"
+              ? isSignup
+                ? "Create Your Skillib Account"
+                : "Welcome Back"
+              : "Enter Your Sign-In Code"}
+          </h1>
+          <p>
+            {step === "email"
+              ? isSignup
+                ? "Use your email to create a secure publisher identity. No password required."
+                : "Use the email linked to your Skillib account. We’ll send a short-lived code."
+              : `Enter the code sent to ${email.trim().toLowerCase()}. It expires shortly.`}
+          </p>
+        </div>
+      </div>
 
       {step === "email" ? (
-        <form onSubmit={requestCode} className="form-stack">
-          <label>
-            Work email
-            <input
-              autoFocus
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              required
-            />
-          </label>
-          <button className="button button-wide" disabled={busy}>
-            {busy ? "Sending…" : "Email me a sign-in code"}
+        <form onSubmit={requestCode} className="auth-form" noValidate>
+          <FormField
+            id="auth-email"
+            label="Email Address"
+            hint="Use an address you can access now"
+            error={error || undefined}
+            required
+          >
+            <div className="input-with-icon">
+              <Mail aria-hidden="true" />
+              <input
+                id="auth-email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com…"
+                autoComplete="email"
+                spellCheck={false}
+                inputMode="email"
+                aria-describedby={
+                  error ? "auth-email-hint auth-email-error" : "auth-email-hint"
+                }
+                aria-invalid={Boolean(error)}
+                required
+              />
+            </div>
+          </FormField>
+
+          <button className="button button-large button-wide" disabled={busy}>
+            {busy ? "Sending Code…" : "Send Sign-In Code"}
+            {!busy && <ArrowRight aria-hidden="true" />}
           </button>
         </form>
       ) : (
-        <form onSubmit={verifyCode} className="form-stack">
-          <label>
-            8-digit code
+        <form onSubmit={verifyCode} className="auth-form" noValidate>
+          {notice && (
+            <div className="form-success" role="status" aria-live="polite">
+              <CheckCircle2 aria-hidden="true" />
+              <span>{notice}</span>
+            </div>
+          )}
+
+          <FormField
+            id="auth-code"
+            label="8-Digit Code"
+            hint="Paste or type the newest code from your email"
+            error={error || undefined}
+            required
+          >
             <input
-              autoFocus
+              id="auth-code"
+              name="one-time-code"
               inputMode="numeric"
               value={otp}
               onChange={(event) =>
                 setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))
               }
-              placeholder="00000000"
+              placeholder="00000000…"
               autoComplete="one-time-code"
+              spellCheck={false}
               className="otp-input"
+              aria-describedby={
+                error ? "auth-code-hint auth-code-error" : "auth-code-hint"
+              }
+              aria-invalid={Boolean(error)}
               required
             />
-          </label>
+          </FormField>
+
           <button
-            className="button button-wide"
+            className="button button-large button-wide"
             disabled={busy || otp.length !== 8}
           >
-            {busy ? "Checking…" : "Continue to my account"}
+            {busy ? "Verifying Code…" : "Open My Account"}
+            {!busy && <ArrowRight aria-hidden="true" />}
           </button>
+
           <button
             type="button"
-            className="text-button center-button"
-            onClick={() => setStep("email")}
+            className="auth-back-button"
+            onClick={changeEmail}
           >
-            Use a different email
+            <ArrowLeft aria-hidden="true" />
+            Use a Different Email
           </button>
         </form>
       )}
 
-      {notice && <div className="form-notice">{notice}</div>}
-      {error && <div className="form-error">{error}</div>}
+      <div className="auth-divider" aria-hidden="true">
+        <span />
+        <b>or</b>
+        <span />
+      </div>
+
       <p className="auth-switch">
-        {mode === "signup" ? "Already have an account?" : "New to AgenTick?"}{" "}
-        <Link href={mode === "signup" ? "/login" : "/signup"}>
-          {mode === "signup" ? "Log in" : "Create one"}
+        {isSignup ? "Already have an account?" : "New to Skillib?"}{" "}
+        <Link href={isSignup ? "/login" : "/signup"}>
+          {isSignup ? "Log In" : "Create an Account"}
         </Link>
       </p>
-    </div>
+
+      <p className="auth-legal">
+        By continuing, you agree to use Skillib responsibly and protect access
+        to your publishing identity.
+      </p>
+    </section>
   );
 }

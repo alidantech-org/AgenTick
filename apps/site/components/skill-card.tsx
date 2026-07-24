@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download, Eye, Package2 } from "lucide-react";
 import type { SkillSummary } from "@/lib/registry/service";
 import { formatDate, formatNumber } from "@/lib/format";
 
@@ -26,16 +27,29 @@ export function SkillCard({
         </Link>
       </h3>
       <p>{skill.description}</p>
-      <div className="keyword-row">
-        {skill.keywords.slice(0, 3).map((keyword) => (
-          <span key={keyword}>{keyword}</span>
+      <div className="keyword-row" aria-label="Package keywords">
+        {skill.keywords.slice(0, 4).map((keyword) => (
+          <Link
+            href={`/skills?keyword=${encodeURIComponent(keyword.toLowerCase())}`}
+            key={keyword}
+          >
+            {keyword}
+          </Link>
         ))}
       </div>
       <footer>
-        <span title="Downloads">↓ {formatNumber(skill.downloads)}</span>
-        <span title="Views">◉ {formatNumber(skill.views)}</span>
+        <span title="Downloads">
+          <Download size={14} /> {formatNumber(skill.downloads)}
+        </span>
+        <span title="Views">
+          <Eye size={14} /> {formatNumber(skill.views)}
+        </span>
         <span>{formatDate(skill.updatedAt)}</span>
-        {privateContext && <span className="owner-context">managed</span>}
+        {privateContext && (
+          <span className="owner-context">
+            <Package2 size={13} /> managed
+          </span>
+        )}
       </footer>
     </article>
   );

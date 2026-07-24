@@ -1,0 +1,237 @@
+.token-workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.token-create-card,
+.token-list-card {
+  padding: 1.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) + 0.3rem);
+  background: hsl(var(--card));
+}
+
+.token-card-header,
+.token-list-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.token-card-header > span,
+.token-identity > span,
+.token-secret-step header > span {
+  display: grid;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.token-card-header svg,
+.token-identity svg,
+.token-secret-step svg,
+.token-row .icon-button svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.token-card-header h2,
+.token-list-heading h2 {
+  margin: 0;
+  font-family: var(--font-inter-tight);
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.token-card-header p,
+.token-list-heading p,
+.token-secret-step p,
+.token-scope-summary p {
+  margin: 0.25rem 0 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.token-create-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.8fr) auto;
+  align-items: end;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.token-scope-summary {
+  display: flex;
+  gap: 0.75rem;
+  min-height: 4.9rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--muted) / 0.35);
+}
+
+.token-scope-summary svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: none;
+  color: hsl(var(--accent));
+}
+
+.token-secret-step {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--accent-muted));
+}
+
+.token-secret-step header {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.token-secret-step code {
+  display: block;
+  overflow-x: auto;
+  padding: 0.85rem;
+  border-radius: var(--radius);
+  background: hsl(var(--ink));
+  color: hsl(var(--ink-foreground));
+  white-space: nowrap;
+}
+
+.token-secret-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.token-cli-hint code {
+  display: inline;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.token-list-heading > span {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-jetbrains-mono);
+  font-size: 0.7rem;
+}
+
+.token-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.token-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.8fr) minmax(0, 1.6fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--background));
+}
+
+.token-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.token-identity strong,
+.token-identity code {
+  display: block;
+}
+
+.token-identity code {
+  margin-top: 0.2rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.72rem;
+}
+
+.token-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.token-meta dt {
+  color: hsl(var(--muted-foreground));
+  font-family: var(--font-jetbrains-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.token-meta dd {
+  margin: 0.2rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+
+.token-revoke-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.token-revoke-confirm > span {
+  width: 100%;
+  color: hsl(var(--destructive));
+  font-size: 0.75rem;
+  text-align: right;
+}
+
+.token-danger-button {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+@media (max-width: 900px) {
+  .token-create-form,
+  .token-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .token-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .token-row > .icon-button {
+    justify-self: end;
+  }
+}
+
+@media (max-width: 600px) {
+  .token-card-header,
+  .token-list-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .token-meta {
+    grid-template-columns: 1fr;
+  }
+}

@@ -4,10 +4,8 @@ import { requestLoginOtp } from "@/lib/auth/service";
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as { email?: unknown };
-    const result = await requestLoginOtp(
-      typeof body.email === "string" ? body.email : "",
-    );
-    return NextResponse.json({ ok: true, ...result });
+    await requestLoginOtp(typeof body.email === "string" ? body.email : "");
+    return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(
       {

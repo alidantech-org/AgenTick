@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SyntaxHighlight } from "@/components/syntax-highlight";
 
 interface Block {
   type: "heading" | "paragraph" | "list" | "code" | "quote";
@@ -88,44 +89,48 @@ function inlineText(value: string): ReactNode[] {
   });
 }
 
-export function SkillReadme({ source }: { source: string }) {
+export async function SkillReadme({ source }: { source: string }) {
   const blocks = blocksFromMarkdown(source);
   return (
     <div className="skill-readme-content">
-      {blocks.map((block, index) => {
-        if (block.type === "heading") {
-          const content = inlineText(block.lines[0] ?? "");
-          if (block.level === 1) return <h2 key={index}>{content}</h2>;
-          if (block.level === 2) return <h3 key={index}>{content}</h3>;
-          return <h4 key={index}>{content}</h4>;
-        }
-        if (block.type === "list") {
-          return (
-            <ul key={index}>
-              {block.lines.map((line, item) => (
-                <li key={item}>{inlineText(line)}</li>
-              ))}
-            </ul>
-          );
-        }
-        if (block.type === "code") {
-          return (
-            <pre key={index} data-language={block.language || undefined}>
-              <code>{block.lines.join("\n")}</code>
-            </pre>
-          );
-        }
-        if (block.type === "quote") {
-          return (
-            <blockquote key={index}>
-              {block.lines.map((line, item) => (
-                <p key={item}>{inlineText(line)}</p>
-              ))}
-            </blockquote>
-          );
-        }
-        return <p key={index}>{inlineText(block.lines.join(" "))}</p>;
-      })}
+      {await Promise.all(
+        blocks.map(async (block, index) => {
+          if (block.type === "heading") {
+            const content = inlineText(block.lines[0] ?? "");
+            if (block.level === 1) return <h2 key={index}>{content}</h2>;
+            if (block.level === 2) return <h3 key={index}>{content}</h3>;
+            return <h4 key={index}>{content}</h4>;
+          }
+          if (block.type === "list") {
+            return (
+              <ul key={index}>
+                {block.lines.map((line, item) => (
+                  <li key={item}>{inlineText(line)}</li>
+                ))}
+              </ul>
+            );
+          }
+          if (block.type === "code") {
+            return (
+              <SyntaxHighlight
+                key={index}
+                code={block.lines.join("\n")}
+                language={block.language || "text"}
+              />
+            );
+          }
+          if (block.type === "quote") {
+            return (
+              <blockquote key={index}>
+                {block.lines.map((line, item) => (
+                  <p key={item}>{inlineText(line)}</p>
+                ))}
+              </blockquote>
+            );
+          }
+          return <p key={index}>{inlineText(block.lines.join(" "))}</p>;
+        }),
+      )}
     </div>
   );
 }

@@ -1,74 +1,92 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
+
+import { and, count, desc, eq, isNull, sql, sum } from "drizzle-orm";
+import { database } from "@/lib/db/client";
 import {
-  execute,
-  executeBatch,
-  numberValue,
-  stringValue,
-} from "@/lib/db/client";
+  apiTokens,
+  organizationInvites,
+  organizationMembers,
+  organizations,
+  registryNamespaces,
+  skills,
+} from "@/lib/db/schema";
+import { dispatchPendingEvents } from "@/lib/events/dispatcher";
+import { publishEvent } from "@/lib/events/bus";
 import { hashApiToken, hashInviteCode, randomToken } from "@/lib/auth/crypto";
-import { sendOrganizationInvite } from "@/lib/auth/mail";
 import { normalizeEmail, normalizeSlug } from "@/lib/format";
 
 export async function getAccountOverview(accountId: string) {
-  const result = await execute(
-    `SELECT
-       (SELECT COUNT(*) FROM skills WHERE owner_account_id = ?) AS skill_count,
-       (SELECT COALESCE(SUM(downloads_count), 0) FROM skills WHERE owner_account_id = ?) AS download_count,
-       (SELECT COUNT(*) FROM organization_members WHERE account_id = ?) AS organization_count,
-       (SELECT COUNT(*) FROM api_tokens WHERE account_id = ? AND revoked_at IS NULL) AS token_count`,
-    [accountId, accountId, accountId, accountId],
-  );
-  const row = result.rows[0];
+  const db = database();
+  const [skillCount, downloadCount, organizationCount, tokenCount] =
+    await Promise.all([
+      db
+        .select({ value: count() })
+        .from(skills)
+        .where(eq(skills.ownerAccountId, accountId)),
+      db
+        .select({ value: sum(skills.downloadsCount) })
+        .from(skills)
+        .where(eq(skills.ownerAccountId, accountId)),
+      db
+        .select({ value: count() })
+        .from(organizationMembers)
+        .where(eq(organizationMembers.accountId, accountId)),
+      db
+        .select({ value: count() })
+        .from(apiTokens)
+        .where(
+          and(eq(apiTokens.accountId, accountId), isNull(apiTokens.revokedAt)),
+        ),
+    ]);
+
   return {
-    skillCount: numberValue(row?.skill_count),
-    downloadCount: numberValue(row?.download_count),
-    organizationCount: numberValue(row?.organization_count),
-    tokenCount: numberValue(row?.token_count),
+    skillCount: skillCount[0]?.value ?? 0,
+    downloadCount: Number(downloadCount[0]?.value ?? 0),
+    organizationCount: organizationCount[0]?.value ?? 0,
+    tokenCount: tokenCount[0]?.value ?? 0,
   };
 }
 
 export async function listApiTokens(accountId: string) {
-  const result = await execute(
-    `SELECT id, token_prefix, name, scopes_json, last_used_at, expires_at, created_at
-       FROM api_tokens
-      WHERE account_id = ? AND revoked_at IS NULL
-      ORDER BY created_at DESC`,
-    [accountId],
-  );
-  return result.rows.map((row) => ({
-    id: String(row.id),
-    prefix: String(row.token_prefix),
-    name: String(row.name),
-    scopes: JSON.parse(String(row.scopes_json)) as string[],
-    lastUsedAt: stringValue(row.last_used_at),
-    expiresAt: stringValue(row.expires_at),
-    createdAt: String(row.created_at),
+  const rows = await database()
+    .select({
+      id: apiTokens.id,
+      prefix: apiTokens.tokenPrefix,
+      name: apiTokens.name,
+      scopes: apiTokens.scopes,
+      lastUsedAt: apiTokens.lastUsedAt,
+      expiresAt: apiTokens.expiresAt,
+      createdAt: apiTokens.createdAt,
+    })
+    .from(apiTokens)
+    .where(and(eq(apiTokens.accountId, accountId), isNull(apiTokens.revokedAt)))
+    .orderBy(desc(apiTokens.createdAt));
+
+  return rows.map((row) => ({
+    ...row,
+    lastUsedAt: row.lastUsedAt?.toISOString() ?? null,
+    expiresAt: row.expiresAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
   }));
 }
 
 export async function createApiToken(accountId: string, rawName: string) {
   const name = rawName.trim().slice(0, 60) || "CLI token";
-  const token = `agt_live_${randomToken(32)}`;
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  const token = `skl_live_${randomToken(32)}`;
+  const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
   const scopes = ["skills:read", "skills:write"];
-  await execute(
-    `INSERT INTO api_tokens (
-       id, account_id, token_prefix, token_hash, name, scopes_json,
-       expires_at, created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      randomUUID(),
+
+  await database()
+    .insert(apiTokens)
+    .values({
       accountId,
-      token.slice(0, 16),
-      hashApiToken(token),
+      tokenPrefix: token.slice(0, 16),
+      tokenHash: hashApiToken(token),
       name,
-      JSON.stringify(scopes),
-      expiresAt.toISOString(),
-      now.toISOString(),
-    ],
-  );
+      scopes,
+      expiresAt,
+    });
+
   return { token, name, scopes, expiresAt: expiresAt.toISOString() };
 }
 
@@ -76,11 +94,18 @@ export async function revokeApiToken(
   accountId: string,
   tokenId: string,
 ): Promise<boolean> {
-  const result = await execute(
-    `UPDATE api_tokens SET revoked_at = ? WHERE id = ? AND account_id = ? AND revoked_at IS NULL`,
-    [new Date().toISOString(), tokenId, accountId],
-  );
-  return result.rowsAffected > 0;
+  const rows = await database()
+    .update(apiTokens)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(
+        eq(apiTokens.id, tokenId),
+        eq(apiTokens.accountId, accountId),
+        isNull(apiTokens.revokedAt),
+      ),
+    )
+    .returning({ id: apiTokens.id });
+  return rows.length > 0;
 }
 
 export async function createOrganization(input: {
@@ -93,60 +118,70 @@ export async function createOrganization(input: {
   const slug = normalizeSlug(input.slug || name);
   if (name.length < 2) throw new Error("Organization name is too short");
   if (slug.length < 2) throw new Error("Choose a valid organization slug");
-  const now = new Date().toISOString();
-  const organizationId = randomUUID();
+
   try {
-    await executeBatch([
-      {
-        sql: `INSERT INTO organizations (id, slug, name, description, owner_account_id, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          organizationId,
+    return await database().transaction(async (tx) => {
+      const [organization] = await tx
+        .insert(organizations)
+        .values({
           slug,
           name,
-          input.description?.trim().slice(0, 280) || null,
-          input.accountId,
-          now,
-          now,
-        ],
-      },
-      {
-        sql: `INSERT INTO registry_namespaces (slug, namespace_type, organization_id, created_at)
-              VALUES (?, 'organization', ?, ?)`,
-        args: [slug, organizationId, now],
-      },
-      {
-        sql: `INSERT INTO organization_members (organization_id, account_id, role, created_at)
-              VALUES (?, ?, 'owner', ?)`,
-        args: [organizationId, input.accountId, now],
-      },
-    ]);
+          description: input.description?.trim().slice(0, 280) || null,
+          ownerAccountId: input.accountId,
+        })
+        .returning({ id: organizations.id });
+
+      if (!organization) throw new Error("Unable to create organization");
+
+      await tx.insert(registryNamespaces).values({
+        slug,
+        namespaceType: "organization",
+        organizationId: organization.id,
+      });
+      await tx.insert(organizationMembers).values({
+        organizationId: organization.id,
+        accountId: input.accountId,
+        role: "owner",
+      });
+
+      return { id: organization.id, name, slug };
+    });
   } catch (error) {
-    if (error instanceof Error && /UNIQUE|constraint/i.test(error.message)) {
+    if (error instanceof Error && /unique|duplicate/i.test(error.message)) {
       throw new Error("That registry namespace is already in use");
     }
     throw error;
   }
-  return { id: organizationId, name, slug };
 }
 
 async function requireOrganizationAdmin(
   accountId: string,
   organizationId: string,
 ) {
-  const result = await execute(
-    `SELECT o.name, o.slug, m.role
-       FROM organizations o
-       JOIN organization_members m ON m.organization_id = o.id
-      WHERE o.id = ? AND m.account_id = ?
-      LIMIT 1`,
-    [organizationId, accountId],
-  );
-  const row = result.rows[0];
-  if (!row || !["owner", "admin"].includes(String(row.role))) {
+  const rows = await database()
+    .select({
+      name: organizations.name,
+      slug: organizations.slug,
+      role: organizationMembers.role,
+    })
+    .from(organizations)
+    .innerJoin(
+      organizationMembers,
+      eq(organizationMembers.organizationId, organizations.id),
+    )
+    .where(
+      and(
+        eq(organizations.id, organizationId),
+        eq(organizationMembers.accountId, accountId),
+      ),
+    )
+    .limit(1);
+
+  const row = rows[0];
+  if (!row || !["owner", "admin"].includes(row.role)) {
     throw new Error("Only organization owners and admins can invite members");
   }
-  return { name: String(row.name), slug: String(row.slug) };
+  return row;
 }
 
 export async function inviteOrganizationMember(input: {
@@ -161,36 +196,48 @@ export async function inviteOrganizationMember(input: {
   );
   const email = normalizeEmail(input.email);
   if (!email.includes("@")) throw new Error("Enter a valid email address");
-  const code = `agt_join_${randomToken(18)}`;
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const inviteId = randomUUID();
-  await execute(
-    `INSERT INTO organization_invites (
-       id, organization_id, email, code_hash, role, created_by_account_id,
-       expires_at, created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      inviteId,
-      input.organizationId,
-      email,
-      hashInviteCode(code),
-      input.role,
-      input.accountId,
-      expiresAt.toISOString(),
-      now.toISOString(),
-    ],
-  );
-  try {
-    await sendOrganizationInvite({
-      email,
-      organizationName: organization.name,
-      code,
-    });
-  } catch (error) {
-    await execute("DELETE FROM organization_invites WHERE id = ?", [inviteId]);
-    throw error;
+
+  const code = `skl_join_${randomToken(18)}`;
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await database().transaction(async (tx) => {
+    const [invite] = await tx
+      .insert(organizationInvites)
+      .values({
+        organizationId: input.organizationId,
+        email,
+        codeHash: hashInviteCode(code),
+        role: input.role,
+        createdByAccountId: input.accountId,
+        expiresAt,
+      })
+      .returning({ id: organizationInvites.id });
+
+    if (!invite) throw new Error("Unable to create invitation");
+
+    await publishEvent(
+      {
+        type: "organization.invitation.created",
+        aggregateType: "organization-invite",
+        aggregateId: invite.id,
+        payload: {
+          email,
+          organizationName: organization.name,
+          code,
+          expiresAt: expiresAt.toISOString(),
+        },
+      },
+      tx,
+    );
+  });
+
+  const delivery = await dispatchPendingEvents(10);
+  if (delivery.failed > 0) {
+    throw new Error(
+      "Invitation created, but email delivery failed. Retry delivery.",
+    );
   }
+
   return {
     email,
     organization: organization.name,
@@ -205,43 +252,56 @@ export async function joinOrganization(input: {
 }) {
   const code = input.code.trim();
   if (code.length < 12) throw new Error("Invitation code is invalid");
-  const now = new Date().toISOString();
-  const result = await execute(
-    `SELECT i.id, i.organization_id, i.email, i.role, o.name, o.slug
-       FROM organization_invites i
-       JOIN organizations o ON o.id = i.organization_id
-      WHERE i.code_hash = ? AND i.accepted_at IS NULL AND i.expires_at > ?
-      LIMIT 1`,
-    [hashInviteCode(code), now],
-  );
-  const row = result.rows[0];
-  if (!row) throw new Error("Invitation code is invalid or expired");
-  if (
-    normalizeEmail(String(row.email)) !== normalizeEmail(input.accountEmail)
-  ) {
-    throw new Error(
-      "Sign in with the email address that received this invitation",
-    );
-  }
-  await executeBatch([
-    {
-      sql: `INSERT OR IGNORE INTO organization_members (organization_id, account_id, role, created_at)
-            VALUES (?, ?, ?, ?)`,
-      args: [
-        String(row.organization_id),
-        input.accountId,
-        String(row.role),
-        now,
-      ],
-    },
-    {
-      sql: "UPDATE organization_invites SET accepted_at = ? WHERE id = ? AND accepted_at IS NULL",
-      args: [now, String(row.id)],
-    },
-  ]);
-  return {
-    name: String(row.name),
-    slug: String(row.slug),
-    role: String(row.role),
-  };
+
+  return database().transaction(async (tx) => {
+    const rows = await tx.execute<{
+      id: string;
+      organization_id: string;
+      email: string;
+      role: "admin" | "publisher" | "member";
+      name: string;
+      slug: string;
+    }>(sql`
+      SELECT i.id, i.organization_id, i.email, i.role, o.name, o.slug
+      FROM organization_invites i
+      JOIN organizations o ON o.id = i.organization_id
+      WHERE i.code_hash = ${hashInviteCode(code)}
+        AND i.accepted_at IS NULL
+        AND i.expires_at > now()
+      FOR UPDATE
+      LIMIT 1
+    `);
+
+    const invite = rows[0];
+    if (!invite) throw new Error("Invitation code is invalid or expired");
+    if (normalizeEmail(invite.email) !== normalizeEmail(input.accountEmail)) {
+      throw new Error(
+        "Sign in with the email address that received this invitation",
+      );
+    }
+
+    await tx
+      .insert(organizationMembers)
+      .values({
+        organizationId: invite.organization_id,
+        accountId: input.accountId,
+        role: invite.role,
+      })
+      .onConflictDoNothing();
+
+    const accepted = await tx
+      .update(organizationInvites)
+      .set({ acceptedAt: new Date() })
+      .where(
+        and(
+          eq(organizationInvites.id, invite.id),
+          isNull(organizationInvites.acceptedAt),
+        ),
+      )
+      .returning({ id: organizationInvites.id });
+
+    if (!accepted[0]) throw new Error("Invitation has already been accepted");
+
+    return { name: invite.name, slug: invite.slug, role: invite.role };
+  });
 }

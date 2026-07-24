@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "paths": {
+      "@alidantech/skillib-config": ["../config/dist/index.d.ts"],
+      "@alidantech/skillib-shared": ["../shared/dist/index.d.ts"],
+      "@alidantech/skillib-skill-lib": ["../skill-lib/dist/index.d.ts"]
+    }
+  },
+  "references": [],
+  "include": ["src/**/*.ts"]
+}

@@ -1,3 +1,4 @@
+import "./publisher.css";
 import { PublishSkillForm } from "@/components/publish-skill-form";
 import { SkillCard } from "@/components/skill-card";
 import { requireAccount } from "@/lib/auth/dal";

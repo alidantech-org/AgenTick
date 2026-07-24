@@ -6,13 +6,13 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 
-function secret(name: "AUTH_SECRET" | "AGENTICK_TOKEN_PEPPER"): string {
+function secret(name: "AUTH_SECRET" | "SKILLIB_TOKEN_PEPPER"): string {
   const value = process.env[name];
   if (value) return value;
   if (process.env.NODE_ENV === "production") {
     throw new Error(`${name} is required in production`);
   }
-  return `agentick-development-${name.toLowerCase()}`;
+  return `skillib-development-${name.toLowerCase()}`;
 }
 
 export function randomToken(bytes = 32): string {
@@ -26,7 +26,7 @@ export function hashSessionToken(token: string): string {
 }
 
 export function hashApiToken(token: string): string {
-  return createHmac("sha256", secret("AGENTICK_TOKEN_PEPPER"))
+  return createHmac("sha256", secret("SKILLIB_TOKEN_PEPPER"))
     .update(token)
     .digest("hex");
 }

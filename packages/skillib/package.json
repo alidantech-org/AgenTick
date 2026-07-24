@@ -1,0 +1,60 @@
+{
+  "name": "skillib",
+  "version": "0.1.0",
+  "description": "Watch, verify, and audit AI-assisted project work.",
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "bin": {
+    "skillib": "./dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/tool/runtime.d.ts",
+      "import": "./dist/tool/runtime.js"
+    }
+  },
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.types.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --exclude **/dist/**",
+    "pack:check": "pnpm pack --pack-destination ../../.skillib-pack"
+  },
+  "dependencies": {
+    "cac": "7.0.0",
+    "chokidar": "5.0.0",
+    "execa": "10.0.0",
+    "fastify": "5.10.0",
+    "picocolors": "1.1.1",
+    "yaml": "2.9.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@alidantech/skillib-config": "workspace:^",
+    "@alidantech/skillib-shared": "workspace:^",
+    "@alidantech/skillib-skill-lib": "workspace:^",
+    "tsup": "8.5.0",
+    "vitest": "4.1.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alidantech-org/AgenTick.git",
+    "directory": "packages/skillib"
+  },
+  "homepage": "https://github.com/alidantech-org/AgenTick#readme",
+  "bugs": {
+    "url": "https://github.com/alidantech-org/AgenTick/issues"
+  },
+  "types": "./dist/tool/runtime.d.ts"
+}

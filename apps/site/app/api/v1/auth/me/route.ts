@@ -6,12 +6,8 @@ export async function GET(request: Request) {
   if (!principal)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   return NextResponse.json({
-    account: {
-      id: principal.id,
-      email: principal.email,
-      handle: principal.handle,
-      displayName: principal.displayName,
-    },
+    handle: principal.handle,
+    email: principal.email,
     scopes: principal.scopes,
   });
 }

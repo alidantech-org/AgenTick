@@ -104,13 +104,13 @@ Run the configured command.`);
 
   it("requires HTTPS for non-local registries", () => {
     expect(() =>
-      registryUrlFromEnv("AGENTICK_REGISTRY_URL", {
-        AGENTICK_REGISTRY_URL: "http://skills.example.test",
+      registryUrlFromEnv("SKILLIB_REGISTRY_URL", {
+        SKILLIB_REGISTRY_URL: "http://skills.example.test",
       }),
     ).toThrow(/must use https/);
     expect(
-      registryUrlFromEnv("AGENTICK_REGISTRY_URL", {
-        AGENTICK_REGISTRY_URL: "http://localhost:3000",
+      registryUrlFromEnv("SKILLIB_REGISTRY_URL", {
+        SKILLIB_REGISTRY_URL: "http://localhost:3000",
       }).origin,
     ).toBe("http://localhost:3000");
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -22,6 +23,7 @@ export function RegistrySearch({
   const [results, setResults] = useState<SearchSkill[]>([]);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onPointer = (event: PointerEvent) => {
@@ -40,9 +42,7 @@ export function RegistrySearch({
     const timer = window.setTimeout(async () => {
       const response = await fetch(
         `/api/v1/skills/search?q=${encodeURIComponent(query)}`,
-        {
-          signal: controller.signal,
-        },
+        { signal: controller.signal },
       );
       if (!response.ok) return;
       const data = (await response.json()) as { skills: SearchSkill[] };
@@ -62,34 +62,46 @@ export function RegistrySearch({
     setOpen(false);
   }
 
+  function clear() {
+    setQuery("");
+    setResults([]);
+    setOpen(false);
+    inputRef.current?.focus();
+  }
+
   return (
     <div
       ref={root}
       className={`registry-search ${compact ? "registry-search-compact" : ""}`}
     >
       <form onSubmit={submit} role="search">
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19">
-          <path
-            d="m20 20-4.4-4.4m2.4-5.1a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-        </svg>
+        <Search aria-hidden="true" className="search-icon size-4 shrink-0" />
         <input
+          ref={inputRef}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
+          onKeyDown={(event) => event.key === "Escape" && clear()}
           placeholder={
             compact
               ? "Search skills"
               : "Search skills, namespaces, and use cases"
           }
+          className="outline-none border-none bg-transparent text-sm placeholder:text-muted-foreground focus:ring-0"
           aria-label="Search skill registry"
         />
-        {!compact && <button type="submit">Search</button>}
+        {query && (
+          <button
+            type="button"
+            onClick={clear}
+            aria-label="Clear search"
+            className="clear-button"
+          >
+            <X className="size-3.5" />
+          </button>
+        )}
       </form>
+
       {open && results.length > 0 && (
         <div className="search-popover" role="listbox">
           {results.map((skill) => (
