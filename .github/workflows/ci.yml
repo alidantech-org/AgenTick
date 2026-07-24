@@ -72,12 +72,19 @@ jobs:
         run: |
           set -euo pipefail
           cargo build --quiet --release --package skillib-cli
-          target/release/skillib --help > /tmp/skillib-cli.log
-          temp_project="$(mktemp -d)"
-          target/release/skillib init "$temp_project" >> /tmp/skillib-cli.log
-          test -f "$temp_project/agents/skillib.yml"
-          target/release/skillib new "$temp_project/agents/example.sl" --name @ci/example >> /tmp/skillib-cli.log
-          target/release/skillib check "$temp_project/agents/example.sl" >> /tmp/skillib-cli.log
+          binary="$GITHUB_WORKSPACE/target/release/skillib"
+          "$binary" --help > /tmp/skillib-cli.log
+          project="$(mktemp -d)"
+          git -C "$project" init --quiet
+          (
+            cd "$project"
+            "$binary" init >> /tmp/skillib-cli.log
+            test -f agents/skillib.yml
+            "$binary" new @ci/example --extension sl >> /tmp/skillib-cli.log
+            test -f agents/skills/ci/example/skill.sl
+            "$binary" check agents/skills/ci/example/skill.sl >> /tmp/skillib-cli.log
+            "$binary" verify >> /tmp/skillib-cli.log
+          )
       - name: Runtime and SMTP smoke
         run: |
           set -euo pipefail
