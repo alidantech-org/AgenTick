@@ -1,5 +1,5 @@
 use serde_json::Value;
-use std::io::{BufRead, Read, Write};
+use std::io::{BufRead, Write};
 
 pub struct StdioTransport<R, W> {
     reader: R,
@@ -25,10 +25,14 @@ impl<R: BufRead, W: Write> StdioTransport<R, W> {
                 content_length = value.trim().parse::<usize>().ok();
             }
         }
-        let length = content_length.ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "missing Content-Length"))?;
+        let length = content_length.ok_or_else(|| {
+            std::io::Error::new(std::io::ErrorKind::InvalidData, "missing Content-Length")
+        })?;
         let mut body = vec![0_u8; length];
         self.reader.read_exact(&mut body)?;
-        serde_json::from_slice(&body).map(Some).map_err(std::io::Error::other)
+        serde_json::from_slice(&body)
+            .map(Some)
+            .map_err(std::io::Error::other)
     }
 
     pub fn write_message(&mut self, value: &Value) -> std::io::Result<()> {
