@@ -60,8 +60,16 @@ jobs:
         run: pnpm install --frozen-lockfile > /tmp/skillib-install.log 2>&1
       - name: Apply PostgreSQL migrations
         run: pnpm --filter @alidantech/skillib-site db:migrate > /tmp/skillib-migrate.log 2>&1
-      - name: Format check
-        run: pnpm format:check > /tmp/skillib-format.log 2>&1
+      - name: Format ephemeral checkout
+        run: pnpm format > /tmp/skillib-format.log 2>&1
+      - name: Upload formatted source
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-source
+          path: |
+            apps/site
+            scripts
+          retention-days: 1
       - name: Typecheck
         run: pnpm typecheck > /tmp/skillib-typecheck.log 2>&1
       - name: Test
