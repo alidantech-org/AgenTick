@@ -7,32 +7,21 @@ use skillib_source::{SourceFile, Span};
 /// Token categories needed by the parser and editor tooling.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TokenKind {
-    /// An identifier or keyword.
     Word,
-    /// A quoted string.
     String,
-    /// A colon.
     Colon,
-    /// A list marker.
     Dash,
-    /// A numbered step marker.
     Numbered,
-    /// A physical newline.
     Newline,
-    /// End of input.
     Eof,
 }
 
 /// A lexical token with source location.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Token {
-    /// Token category.
     pub kind: TokenKind,
-    /// Original source text.
     pub text: String,
-    /// Byte range in the source.
     pub span: Span,
-    /// Leading indentation measured in spaces.
     pub indent: usize,
 }
 
@@ -46,7 +35,11 @@ pub fn lex(source: &SourceFile) -> (Vec<Token>, Vec<Diagnostic>) {
     for line in source.text().split_inclusive('\n') {
         let body = line.trim_end_matches(['\r', '\n']);
         let indent = body.chars().take_while(|ch| *ch == ' ').count();
-        if body.chars().take_while(char::is_whitespace).any(|ch| ch == '\t') {
+        if body
+            .chars()
+            .take_while(|ch| ch.is_whitespace())
+            .any(|ch| ch == '\t')
+        {
             diagnostics.push(Diagnostic::error(
                 "SKL1002",
                 "Tabs are not allowed; use four spaces",
@@ -79,7 +72,10 @@ fn tokenize_line(line: &str, indent: usize, offset: usize, output: &mut Vec<Toke
     let start = offset + indent;
     let kind = if trimmed.starts_with("- ") {
         TokenKind::Dash
-    } else if trimmed.chars().next().is_some_and(|ch| ch.is_ascii_digit())
+    } else if trimmed
+        .chars()
+        .next()
+        .is_some_and(|ch| ch.is_ascii_digit())
         && trimmed.contains(". ")
     {
         TokenKind::Numbered
