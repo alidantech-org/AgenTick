@@ -29,12 +29,20 @@ pub struct SourceFile {
 
 impl SourceFile {
     /// Creates a source file after validating its extension.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`SourceError::UnsupportedExtension`] when the path does not end
+    /// in `.sl` or `.skillib`.
     pub fn new(path: impl Into<PathBuf>, text: impl Into<String>) -> Result<Self, SourceError> {
         let path = path.into();
         if !is_skillib_path(&path) {
             return Err(SourceError::UnsupportedExtension(path));
         }
-        Ok(Self { path, text: text.into() })
+        Ok(Self {
+            path,
+            text: text.into(),
+        })
     }
 
     /// Returns the source path.
@@ -53,7 +61,10 @@ impl SourceFile {
 /// Returns true for `.sl` and `.skillib` files.
 #[must_use]
 pub fn is_skillib_path(path: &Path) -> bool {
-    matches!(path.extension().and_then(|value| value.to_str()), Some("sl" | "skillib"))
+    matches!(
+        path.extension().and_then(|value| value.to_str()),
+        Some("sl" | "skillib")
+    )
 }
 
 /// Source loading failures.
